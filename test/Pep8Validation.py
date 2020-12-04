@@ -34,7 +34,7 @@ class MyTestCase(unittest.TestCase):
         # setup
         paths = self.getFilePaths()
         pep8style = pep8.StyleGuide()
-        pep8style.ignore_code(("E501"))
+        pep8style.options.max_line_length = 100
 
         print("paths: ", paths)
 
