@@ -7,7 +7,7 @@ import pep8
 class MyTestCase(unittest.TestCase):
     def getFilePaths(self, rootdir: str = "..\src"):
         """
-        determines recursively all files of the given rootdir
+        determines recursively all python (*.py) files of the given rootdir
 
         :param rootdir: the dir where to start
         :return: an array listing all filepaths
@@ -19,7 +19,7 @@ class MyTestCase(unittest.TestCase):
             path = os.path.join(rootdir, path)
             if os.path.isdir(path):
                 paths = paths + self.getFilePaths(path)
-            else:
+            elif ".py" in path:
                 paths = paths + [path]
 
         return paths
@@ -34,6 +34,9 @@ class MyTestCase(unittest.TestCase):
         # setup
         paths = self.getFilePaths()
         pep8style = pep8.StyleGuide()
+        pep8style.ignore_code(("E501"))
+
+        print("paths: ", paths)
 
         # execute
         result = pep8style.check_files(paths)
