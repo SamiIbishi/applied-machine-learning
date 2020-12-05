@@ -58,7 +58,8 @@ class MySummaryWriter(SummaryWriter):
 
             print("tensorboard is temporary up: http://" + host + ":" + str(
                 port) + "\nWill be closed as soon as the python code exits. To run tensorboard "
-                        "independently execute '" + "tensorboard --logdir " + self.base_logdir + "'")
+                        "independently execute '" + "tensorboard --logdir " + self.base_logdir +
+                        "'")
 
     def log_training_accuracy(self, acc, batch_index):
         index = self.epoch * self.numb_batches + batch_index

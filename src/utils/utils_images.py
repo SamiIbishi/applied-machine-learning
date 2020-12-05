@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+
 def images_to_probs(net, images):
     '''
     Generates predictions and corresponding probabilities from a trained
@@ -14,6 +15,7 @@ def images_to_probs(net, images):
     _, preds_tensor = torch.max(output, 1)
     preds = np.squeeze(preds_tensor.numpy())
     return preds, [F.softmax(el, dim=0)[i].item() for i, el in zip(preds, output)]
+
 
 def matplotlib_imshow(img, one_channel=False):
     """
@@ -32,6 +34,7 @@ def matplotlib_imshow(img, one_channel=False):
         plt.imshow(npimg, cmap="Greys")
     else:
         plt.imshow(np.transpose(npimg, (1, 2, 0)))
+
 
 def plot_classes_preds(net, images, labels, classes):
     '''
