@@ -3,7 +3,6 @@ import os
 import pep8
 
 
-
 class MyTestCase(unittest.TestCase):
     def getFilePaths(self, rootdir: str = "..\src"):
         """
@@ -33,10 +32,11 @@ class MyTestCase(unittest.TestCase):
 
         # setup
         paths = self.getFilePaths()
+        paths += self.getFilePaths(rootdir=os.path.join("..", "test"))
         pep8style = pep8.StyleGuide()
         pep8style.options.max_line_length = 100
 
-        print("paths: ", paths)
+        print("Paths to check: ", paths)
 
         # execute
         result = pep8style.check_files(paths)
