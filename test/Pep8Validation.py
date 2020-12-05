@@ -19,7 +19,7 @@ class MyTestCase(unittest.TestCase):
             path = os.path.join(rootdir, path)
             if os.path.isdir(path):
                 paths = paths + self.getFilePaths(path)
-            elif ".py" in path:
+            elif path[-3:] == ".py":
                 paths = paths + [path]
 
         return paths
