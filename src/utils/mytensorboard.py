@@ -45,7 +45,8 @@ class MySummaryWriter(SummaryWriter):
 
     def start_tensorboard(self, host="localhost", port=6006):
         """
-        If host and port cannot be pinged, this method starts tensorboard for the duration of the execution of this python programm
+        If host and port cannot be pinged, this method starts tensorboard for the
+        duration of the execution of this python programm
         :param host:
         :param port:
         """
@@ -56,7 +57,8 @@ class MySummaryWriter(SummaryWriter):
             subprocess.Popen("tensorboard --logdir " + self.base_logdir)
 
             print("tensorboard is temporary up: http://" + host + ":" + str(
-                port) + "\nWill be closed as soon as the python code exits. To run tensorboard independently execute '" + "tensorboard --logdir " + self.base_logdir + "'")
+                port) + "\nWill be closed as soon as the python code exits. To run tensorboard "
+                        "independently execute '" + "tensorboard --logdir " + self.base_logdir + "'")
 
     def log_training_accuracy(self, acc, batch_index):
         index = self.epoch * self.numb_batches + batch_index
@@ -87,7 +89,14 @@ class MySummaryWriter(SummaryWriter):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
-        self.writer.add_figure(tag,figure,global_step,close,walltime)
+        self.writer.add_figure(tag, figure, global_step, close, walltime)
+
+    def add_image(self, tag, img, batch_index=None, walltime=None, dataformats="CHW"):
+        if (batch_index):
+            global_step = self.epoch * self.numb_batches + batch_index
+        else:
+            global_step = None
+        self.writer.add_image(tag, img, global_step, walltime, dataformats)
 
     def add_graph(self, net, images):
         self.writer.add_graph(net, images)
