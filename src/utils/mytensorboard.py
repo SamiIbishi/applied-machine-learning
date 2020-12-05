@@ -4,9 +4,18 @@ from socket import *
 import subprocess
 
 
-def pingit(host, port):  # defining function for later use
+def pingit(host, port):
+    """
+    Tries to set up a connection to a host and port to test if it can be pinged
+    Closes the connection immediately
 
-    s = socket(AF_INET, SOCK_STREAM)  # Creates socket
+    :param host:
+    :param port:
+    :return: True, if the connection attempt was accepted and False if not.
+    """
+
+    # init socket
+    s = socket(AF_INET, SOCK_STREAM)
 
     try:
         s.connect((host, port))  # tries to connect to the host
@@ -14,12 +23,15 @@ def pingit(host, port):  # defining function for later use
         s.close()  # closes socket, so it can be re-used
         return False
 
-    while True:  # If connected to host
-        s.close()  # closes socket just in case
-        return True
+    s.close()  # closes socket just in case
+    return True
 
 
 class MySummaryWriter(SummaryWriter):
+    """
+    Personalized tensorboard writer to simplify logging to tensorboard
+    """
+
     def __init__(self, numb_batches: int, base_logdir: str = os.path.join("..", "logs"),
                  experiment_name: str = "FaceRecogniction", run_name: str = "experiment1", epoch=0,
                  batch_size=8):
