@@ -66,6 +66,10 @@ class MySummaryWriter(SummaryWriter):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/test', acc, index)
 
+    def log_validation_accuracy(self, acc, batch_index):
+        index = self.epoch * self.numb_batches + batch_index
+        self.writer.add_scalar('Accuracy/validation', acc, index)
+
     def log_training_loss(self, loss, batch_index):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/training', loss, index)
@@ -74,9 +78,19 @@ class MySummaryWriter(SummaryWriter):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/test', loss, index)
 
-    def add_figure(self, tag, figure, batch_index, close=True, walltime=None):
-        global_step = self.epoch * self.numb_batches + batch_index
+    def log_validation_loss(self, loss, batch_index):
+        index = self.epoch * self.numb_batches + batch_index
+        self.writer.add_scalar('Loss/validation', loss, index)
+
+    def add_figure(self, tag, figure, batch_index=None, close=True, walltime=None):
+        if (batch_index):
+            global_step = self.epoch * self.numb_batches + batch_index
+        else:
+            global_step = None
         self.writer.add_figure(tag,figure,global_step,close,walltime)
+
+    def add_graph(self, net, images):
+        self.writer.add_graph(net, images)
 
     def increment_epoch(self):
         self.epoch += 1
