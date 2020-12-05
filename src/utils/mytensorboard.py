@@ -90,7 +90,7 @@ class MySummaryWriter(SummaryWriter):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
-        self.writer.add_figure(tag, figure, global_step, close, walltime)
+        self.writer.add_figure(tag,figure,global_step,close,walltime)
 
     def add_image(self, tag, img, batch_index=None, walltime=None, dataformats="CHW"):
         if (batch_index):
