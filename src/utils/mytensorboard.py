@@ -1,7 +1,10 @@
-from torch.utils.tensorboard import SummaryWriter
+import time
 import os
-from socket import *
 import subprocess
+from socket import *
+import shutil
+
+from torch.utils.tensorboard import SummaryWriter
 
 
 def pingit(host, port):
@@ -33,15 +36,54 @@ class MySummaryWriter(SummaryWriter):
     """
 
     def __init__(self, numb_batches: int, base_logdir: str = os.path.join("..", "logs"),
-                 experiment_name: str = "FaceRecogniction", run_name: str = "experiment1", epoch=0,
-                 batch_size=8):
+                 experiment_name: str = "FaceRecogniction", run_name: str = "run_1", epoch=0,
+                 batch_size=8, overwrite_logs=False):
         self.epoch = epoch
         self.numb_batches = numb_batches
         self.base_logdir = base_logdir
-        self.logpath = os.path.join(base_logdir, experiment_name, run_name)
+        self.experiment_name = experiment_name
+        self.run_name = run_name
+        self.logpath = self.get_empty_logpath(overwrite_logs)
+        print("logpath: ", self.logpath)
         self.batch_size = batch_size
         self.start_tensorboard()
         self.writer = SummaryWriter(self.logpath)
+
+    def get_empty_logpath(self, overwrite_logs):
+        """
+
+        :param base_logdir:
+        :param experiment_name:
+        :param run_name:
+        :param overwrite_logs:
+        :return:
+        """
+        logpath = os.path.join(self.base_logdir, self.experiment_name, self.run_name)
+        if (not os.path.exists(logpath)) or len(os.listdir(logpath)) == 0:
+            return logpath
+        else:
+            print("nonempty logpath")
+            if (overwrite_logs):
+                shutil.rmtree(logpath)
+                time.sleep(5)
+                return logpath
+            else:
+                runs = os.listdir(os.path.join(self.base_logdir, self.experiment_name))
+                print("runs: ", runs)
+                max = 1
+                for run in runs:
+                    splitted = run.split("(")
+                    print("splitted: ", splitted)
+                    if len(splitted) > 1 and splitted[0] == self.run_name:
+                        try:
+                            val = int(splitted[-1][:-1])
+                            if val >= max:
+                                max = val + 1
+                        except ValueError:
+                            None
+                        print("val: ", splitted[-1], val)
+
+                return logpath + "(" + str(max) + ")"
 
     def start_tensorboard(self, host="localhost", port=6006):
         """
@@ -59,7 +101,7 @@ class MySummaryWriter(SummaryWriter):
             print("tensorboard is temporary up: http://" + host + ":" + str(
                 port) + "\nWill be closed as soon as the python code exits. To run tensorboard "
                         "independently execute '" + "tensorboard --logdir " + self.base_logdir +
-                        "'")
+                  "'")
 
     def log_training_accuracy(self, acc, batch_index):
         index = self.epoch * self.numb_batches + batch_index
@@ -90,7 +132,7 @@ class MySummaryWriter(SummaryWriter):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
-        self.writer.add_figure(tag,figure,global_step,close,walltime)
+        self.writer.add_figure(tag, figure, global_step, close, walltime)
 
     def add_image(self, tag, img, batch_index=None, walltime=None, dataformats="CHW"):
         if (batch_index):
