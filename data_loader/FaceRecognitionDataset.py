@@ -1,16 +1,14 @@
 # General Python Packages
-import os
 import glob
 from os.path import join
 
 # Torch Packages
 from torch.utils.data import Dataset, DataLoader
 
-
 class FaceRecognitionDataset(Dataset):
-    """ Labeled Faces in the Wild dataset."""
+    # Dataset class for handling .jpg files
 
-    # define the constructor of this dataset object
+    # Define the constructor of this dataset object
     def __init__(self, dataset_folder):
         """
         Args:
@@ -18,39 +16,23 @@ class FaceRecognitionDataset(Dataset):
         """
         self.dataset_folder = dataset_folder
 
-        # What else to do when creating the dataset in our case?
-        # Possibly load the fielpaths into a list and store it
-        # We can wrap that into a function
-
-        self.read_file_paths()
-
-        # a dict to store mapping of classes to indices since we need the classes to be numerical
-        self.encode_classes()
-
-
-    def read_file_paths(self):
+        # Crawl every subfolder for .jpg files
         self.image_filenames = glob.glob(join(self.dataset_folder, "**/*.jpg"), recursive=True)
 
-    def encode_classes(self):
-        self.class_to_idx = dict()
-        for filename in self.image_filenames:
-            split_path = filename.split(os.sep)
-            label = split_path[-2]
-            self.class_to_idx[label] = self.class_to_idx.get(label, len(self.class_to_idx))
+        # Load the filepaths into a list and store it
+        self.read_file_paths()
+
+        # A dict to store mapping of classes to indices since we need the classes to be numerical
+        self.encode_classes()
 
     def __len__(self):
         return len(self.image_filenames)
 
     def __getitem__(self, idx):
+        # Get the image based on the ID and resize to 500x500
+        image = Image.open(self.image_filenames[idx]).resize(500, 500)
 
-        image = Image.open(self.image_filenames[idx])
+        # Get the label to the above image
 
-        # What about the label, can we get it from the filepath?
-
-        # split the path into parts using the os separator,
-        # take the folder name to be the class name (second last element)
-        split_path = self.image_filenames[idx].split(os.sep)
-        label = split_path[-2]
-
-        # look up the dict we created in the __init__() method
-        return image, self.class_to_idx[label]
+        # Return the resized image and its label
+        return image, label

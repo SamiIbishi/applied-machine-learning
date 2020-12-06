@@ -168,3 +168,4 @@ dependencies:
     - tensorboard-plugin-wit==1.7.0
     - werkzeug==1.0.1
     - wget==3.2
+    - gdown==3.12.2
