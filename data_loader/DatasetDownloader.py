@@ -47,14 +47,3 @@ class DatasetDownloader:
 
         # And delete the .zip file
         remove(join(self.dataset_folder, self.filename))
-
-
-if not exists("../data/celeba_dataset/images"):
-    os.makedirs("../data/celeba_dataset/images")
-
-DatasetDownloader(dataset_folder="../data/celeba_dataset/images",
-                  url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
-                  filename="images.zip", zip=True)
-DatasetDownloader(dataset_folder="../data/celeba_dataset",
-                  url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
-                  filename="labels.txt", zip=False)
