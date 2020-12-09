@@ -14,7 +14,7 @@ from zipfile import ZipFile
 class DatasetDownloader:
     # Downloader Class to handle the dataset download and unzipping it
 
-    def __init__(self, dataset_folder, url, filename, zip):
+    def __init__(self, dataset_folder: str, url: str, filename: str, zip: bool):
         """
         Args:
             dataset_folder(string): Path to the folder to save the dataset to (must be empty)
@@ -36,7 +36,7 @@ class DatasetDownloader:
         gdown.download(self.url, output_file, quiet=False)
 
         # Unzip if selected on init()
-        if self.zip is True:
+        if self.zip:
             self.unzip()
 
     def unzip(self):

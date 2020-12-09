@@ -16,7 +16,7 @@ class FaceRecognitionDataset(Dataset):
     # Dataset class for handling .jpg files
 
     # Define the constructor of this dataset object
-    def __init__(self, dataset_folder, labels_path):
+    def __init__(self, dataset_folder: str, labels_path: str):
         """
         Args:
             dataset_folder(string): Path to the main folder containing the dataset
@@ -30,7 +30,7 @@ class FaceRecognitionDataset(Dataset):
 
         self.labels = self.labels_from_txt()
 
-    def labels_from_txt(self):
+    def labels_from_txt(self) -> dict:
         labels = {}
         with open(self.labels_path) as labels_file:
             # Read each line as a key value pair and save it to the labels dict
@@ -40,10 +40,10 @@ class FaceRecognitionDataset(Dataset):
 
         return labels
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.image_filenames)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[Image, dict]:
         # Get the image based on the ID and resize to 500x500
         image = Image.open(self.image_filenames[idx]).resize([500, 500])
 

@@ -2,7 +2,7 @@ from torch.utils.data import Subset
 import numpy as np
 
 
-def split_train_test(dataset, val_ratio):
+def split_train_test(dataset: Dataset, val_ratio: float) -> tuple[Subset, Subset]:
     """
     Args:
         dataset(Dataset): Dataset object which we want to split into train and validation subsets
