@@ -1,13 +1,13 @@
 import time
 import os
 import subprocess
-from socket import *
+from socket import socket, AF_INET, SOCK_STREAM
 import shutil
 
 from torch.utils.tensorboard import SummaryWriter
 
 
-def pingit(host, port):
+def pingit(host: str, port: int):
     """
     Tries to set up a connection to a host and port to test if it can be pinged
     Closes the connection immediately
@@ -35,9 +35,15 @@ class MySummaryWriter(SummaryWriter):
     Personalized tensorboard writer to simplify logging to tensorboard
     """
 
-    def __init__(self, numb_batches: int, base_logdir: str = os.path.join("..", "logs"),
-                 experiment_name: str = "FaceRecogniction", run_name: str = "run_1", epoch=0,
-                 batch_size=8, overwrite_logs=False):
+    def __init__(self,
+                 numb_batches: int,
+                 base_logdir: str = os.path.join("..", "logs"),
+                 experiment_name: str = "FaceRecogniction",
+                 run_name: str = "run_1",
+                 epoch: int = 0,
+                 batch_size: int = 8,
+                 overwrite_logs: bool = False
+                 ):
         self.epoch = epoch
         self.numb_batches = numb_batches
         self.base_logdir = base_logdir
@@ -49,7 +55,7 @@ class MySummaryWriter(SummaryWriter):
         self.start_tensorboard()
         self.writer = SummaryWriter(self.logpath)
 
-    def get_empty_logpath(self, overwrite_logs):
+    def get_empty_logpath(self, overwrite_logs: bool):
         """
 
         :param base_logdir:
@@ -69,11 +75,9 @@ class MySummaryWriter(SummaryWriter):
                 return logpath
             else:
                 runs = os.listdir(os.path.join(self.base_logdir, self.experiment_name))
-                print("runs: ", runs)
                 max = 1
                 for run in runs:
                     splitted = run.split("(")
-                    print("splitted: ", splitted)
                     if len(splitted) > 1 and splitted[0] == self.run_name:
                         try:
                             val = int(splitted[-1][:-1])
@@ -81,9 +85,9 @@ class MySummaryWriter(SummaryWriter):
                                 max = val + 1
                         except ValueError:
                             None
-                        print("val: ", splitted[-1], val)
 
-                return logpath + "(" + str(max) + ")"
+                logpath = logpath + "(" + str(max) + ")"
+                return logpath
 
     def start_tensorboard(self, host="localhost", port=6006):
         """
