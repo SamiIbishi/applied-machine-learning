@@ -11,8 +11,8 @@ dependencies:
   - blas=1.0=mkl
   - bleach=3.2.1=py_0
   - brotlipy=0.7.0=py38h2bbff1b_1003
-  - ca-certificates=2020.11.8=h5b45459_0
-  - certifi=2020.11.8=py38haa244fe_0
+  - ca-certificates=2020.12.5=h5b45459_0
+  - certifi=2020.12.5=py38haa244fe_0
   - cffi=1.14.3=py38hcd4344a_2
   - chardet=3.0.4=py38haa95532_1003
   - colorama=0.4.4=py_0
@@ -22,7 +22,9 @@ dependencies:
   - decorator=4.4.2=py_0
   - defusedxml=0.6.0=py_0
   - entrypoints=0.3=py38_0
+  - filelock=3.0.12=pyh9f0ad1d_0
   - freetype=2.10.4=hd328e21_0
+  - gdown=3.12.2=pyh9f0ad1d_0
   - h5py=2.10.0=py38h5e291fa_0
   - hdf5=1.10.4=h7ebc959_0
   - icc_rt=2019.0.0=h0cc432a_1
@@ -133,6 +135,7 @@ dependencies:
   - torchaudio=0.7.0=py38
   - torchvision=0.8.1=py38_cu110
   - tornado=6.0.4=py38he774522_1
+  - tqdm=4.54.1=pyhd8ed1ab_0
   - traitlets=5.0.5=py_0
   - typing_extensions=3.7.4.3=py_0
   - urllib3=1.25.11=py_0
@@ -168,4 +171,3 @@ dependencies:
     - tensorboard-plugin-wit==1.7.0
     - werkzeug==1.0.1
     - wget==3.2
-    - gdown==3.12.2

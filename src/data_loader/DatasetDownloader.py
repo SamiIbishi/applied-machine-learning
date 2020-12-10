@@ -14,32 +14,39 @@ from zipfile import ZipFile
 class DatasetDownloader:
     # Downloader Class to handle the dataset download and unzipping it
 
-    def __init__(self, dataset_folder: str, url: str, filename: str, zip: bool):
+    def __init__(self, url: str, filename: str, dataset_dir: str = "../data/new_dataset/", unzip: bool = False):
         """
-        Args:
-            dataset_folder(string): Path to the folder to save the dataset to (must be empty)
-            url(string): The url from where to download the file
-            filename(string): The name to save the downloaded file as
-            zip(bool): If the data is zipped and needs to be unzipped
+        Downloads a remote data set and stores it in target directory.
+
+        :param url: The url from where to download the file
+        :param filename: The name to save the downloaded file as
+        :param dataset_dir: Path to an empty directory to save the dataset, default "../data/new_dataset/"
+        :param unzip: If the data is zipped and needs to be unzipped, default 'False'
         """
-        self.dataset_folder = dataset_folder
+
+        # Source
         self.url = url
+
+        # Paths
+        self.dataset_folder = dataset_dir
         self.filename = filename
-        self.zip = zip
+
+        # Operations
+        self.unzip = unzip
 
         # Download the file and unzip if necessary
-        self.download_from_gdrive()
+        self._download_from_gdrive()
 
-    def download_from_gdrive(self):
+    def _download_from_gdrive(self):
         # Download the file from google drive
         output_file = join(self.dataset_folder, self.filename)
         gdown.download(self.url, output_file, quiet=False)
 
         # Unzip if selected on init()
-        if self.zip:
-            self.unzip()
+        if self.unzip:
+            self._unzip()
 
-    def unzip(self):
+    def _unzip(self):
         # Unzip the dataset
         with ZipFile(join(self.dataset_folder, self.filename), 'r') as zipfile:
             # Extract all the contents of the zip file in the same directory
@@ -47,3 +54,12 @@ class DatasetDownloader:
 
         # And delete the .zip file
         remove(join(self.dataset_folder, self.filename))
+
+
+DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
+                  url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
+                  filename="images.zip", unzip=True)
+
+DatasetDownloader(dataset_dir="../data/celeba_dataset",
+                  url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
+                  filename="labels.txt", unzip=False)
