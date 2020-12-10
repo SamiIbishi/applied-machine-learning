@@ -1,56 +1,55 @@
 # General Python Packages
-import os
+
 import glob
 from os.path import join
 
 # Torch Packages
 from torch.utils.data import Dataset, DataLoader
 
+# PIL Package
+from PIL import Image
+
+# Substitute Package
+from re import sub
+
 
 class FaceRecognitionDataset(Dataset):
-    """ Labeled Faces in the Wild dataset."""
+    # Dataset class for handling .jpg files
 
-    # define the constructor of this dataset object
-    def __init__(self, dataset_folder):
+    # Define the constructor of this dataset object
+    def __init__(self, dataset_folder: str, labels_path: str):
         """
         Args:
-            dataset_folder(string): Path to the main folder containing the dataset.
+            dataset_folder(string): Path to the main folder containing the dataset
+            labels_file(string): Full path to the labels text file
         """
         self.dataset_folder = dataset_folder
+        self.labels_path = labels_path
 
-        # What else to do when creating the dataset in our case?
-        # Possibly load the fielpaths into a list and store it
-        # We can wrap that into a function
-
-        self.read_file_paths()
-
-        # a dict to store mapping of classes to indices since we need the classes to be numerical
-        self.encode_classes()
-
-
-    def read_file_paths(self):
+        # Crawl every subfolder for .jpg files
         self.image_filenames = glob.glob(join(self.dataset_folder, "**/*.jpg"), recursive=True)
 
-    def encode_classes(self):
-        self.class_to_idx = dict()
-        for filename in self.image_filenames:
-            split_path = filename.split(os.sep)
-            label = split_path[-2]
-            self.class_to_idx[label] = self.class_to_idx.get(label, len(self.class_to_idx))
+        self.labels = self.labels_from_txt()
 
-    def __len__(self):
+    def labels_from_txt(self) -> dict:
+        labels = {}
+        with open(self.labels_path) as labels_file:
+            # Read each line as a key value pair and save it to the labels dict
+            for line in labels_file:
+                (image_id, target) = line.split()
+                labels[int(sub(r"\D", "", image_id))] = target
+
+        return labels
+
+    def __len__(self) -> int:
         return len(self.image_filenames)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[Image, dict]:
+        # Get the image based on the ID and resize to 500x500
+        image = Image.open(self.image_filenames[idx]).resize([500, 500])
 
-        image = Image.open(self.image_filenames[idx])
+        # Get the label to the above image
+        label = self.labels[idx]
 
-        # What about the label, can we get it from the filepath?
-
-        # split the path into parts using the os separator,
-        # take the folder name to be the class name (second last element)
-        split_path = self.image_filenames[idx].split(os.sep)
-        label = split_path[-2]
-
-        # look up the dict we created in the __init__() method
-        return image, self.class_to_idx[label]
+        # Return the resized image and its label
+        return image, label
