@@ -4,10 +4,9 @@ import glob
 import typing
 from os.path import join
 import numpy as np
-
-# Torch Packages
 from typing import List, Any, Union
 
+# Torch Packages
 from torch.utils.data import Dataset
 
 # PIL Package
@@ -18,9 +17,8 @@ from re import sub
 
 
 class FaceRecognitionDataset(Dataset):
-    # Dataset class for handling .jpg files
+    # Dataset class for handling .jpg files in celeba dataset
 
-    # Define the constructor of this dataset object
     def __init__(self, dataset_dir: str, labels_path: str, image_width: int = 512,
                  image_height: int = 512):
         """
@@ -90,7 +88,7 @@ class FaceRecognitionDataset(Dataset):
 
     def _image_id_to_filepath(self, example_filepath: str, image_id: int) -> str:
         """
-        Reconstructs the filepath of image given its id.
+        Reconstructs the filepath of an image given its id.
 
         :param example_filepath: An example filepath of the same shape as the output filepath
         :param image_id: The id which we want to get the filepath for
@@ -117,7 +115,7 @@ class FaceRecognitionDataset(Dataset):
     def __len__(self) -> int:
         return len(self.triplets)
 
-    def __getitem__(self, idx: int) -> typing.Tuple[list, dict]:
+    def __getitem__(self, idx: int) -> typing.Tuple[list, str]:
         # Get the respective image triplet
         triplet = self.triplets[idx]
         # The image id is the id of the first image in the triplet
