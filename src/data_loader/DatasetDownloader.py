@@ -56,10 +56,10 @@ class DatasetDownloader:
         remove(join(self.dataset_folder, self.filename))
 
 
-DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
-                  url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
-                  filename="images.zip", unzip=True)
-
-DatasetDownloader(dataset_dir="../data/celeba_dataset",
-                  url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
-                  filename="labels.txt", unzip=False)
+# DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
+#                   url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
+#                   filename="images.zip", unzip=True)
+#
+# DatasetDownloader(dataset_dir="../data/celeba_dataset",
+#                   url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
+#                   filename="labels.txt", unzip=False)
