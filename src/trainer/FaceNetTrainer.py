@@ -104,6 +104,7 @@ class SiameseNetworkTrainer:
         for epoch in range(epochs):
             self.train_epoch()
             self.evaluate()
+            self.epoch +=1
 
     def inference(self, loader=None):
 
