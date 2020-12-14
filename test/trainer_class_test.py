@@ -7,7 +7,10 @@ from src.model.FaceNet import SiameseNetwork
 from src.trainer.FaceNetTrainer import SiameseNetworkTrainer
 
 import time
+import utils.utils_images as img_util
+
 batch_size = 4
+
 
 if __name__ == '__main__':
     to_pil_image = torchvision.transforms.ToPILImage()
@@ -51,16 +54,33 @@ if __name__ == '__main__':
 
 
     # write sample images to tensorboard
-    anchors_grid = torchvision.utils.make_grid(anchors)
-    positives_grid = torchvision.utils.make_grid(positives)
-    negatives_grid = torchvision.utils.make_grid(negatives)
 
+
+    anchors_grid = torchvision.utils.make_grid(anchors, nrow=batch_size)
     tensorboard_writer.add_image("anchor sample", anchors_grid)
-    time.sleep(3)
+
+    positives_grid = torchvision.utils.make_grid(positives, nrow=batch_size)
     tensorboard_writer.add_image("positives sample", positives_grid)
-    time.sleep(5)
+
+    negatives_grid = torchvision.utils.make_grid(negatives, nrow=batch_size)
     tensorboard_writer.add_image("negatives sample", negatives_grid)
 
+    total_grid = torchvision.utils.make_grid([anchors_grid, positives_grid, negatives_grid], nrow=1)
+    tensorboard_writer.add_image("sample", total_grid)
 
-    trainer.train(epochs=1)
+    fig = img_util.plot_classes_preds_face_recognition(anchors, labels, ["1234", "1234", "1234", "1234"])
+    tensorboard_writer.add_figure("predictions vs. actuals", fig)
+
+    time.sleep(13)
+
+    # Deleting image variables to free RAM
+    anchors_grid = None
+    positives_grid = None
+    negatives_grid = None
+    total_grid = None
+    fig = None
+
+    print("start training")
+
+    trainer.train(epochs=3)
 
