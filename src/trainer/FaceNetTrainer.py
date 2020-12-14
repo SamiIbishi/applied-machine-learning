@@ -9,7 +9,7 @@ import time
 import typing
 
 from utils.mytensorboard import MySummaryWriter
-
+import utils.utils_images as img_util
 
 # Template to modify
 class SiameseNetworkTrainer:
@@ -93,6 +93,11 @@ class SiameseNetworkTrainer:
     def evaluate(self):
 
         self.tensorboard_writer.increment_epoch()
+        images, labels = next(iter(self.valid_loader))
+        predictions = ["1234", "1234", "1234", "1234"] #ToDO
+        fig = img_util.plot_classes_preds_face_recognition(images[0], labels, predictions)
+
+        self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
 
     def train(self, epochs: int = 10):
         self.epochs = epochs
