@@ -46,14 +46,14 @@ if __name__ == '__main__':
     negatives = images[2]
 
     # write graph of model to tensorboard
-    #tensorboard_writer.add_graph(model, images)
+    tensorboard_writer.add_graph(model, images)
 
+
+    # write sample images to tensorboard
     anchors_grid = torchvision.utils.make_grid(anchors)
-    negatives_grid = torchvision.utils.make_grid(negatives)
     positives_grid = torchvision.utils.make_grid(positives)
+    negatives_grid = torchvision.utils.make_grid(negatives)
 
-    all_grid = torchvision.utils.make_grid(torch.stack(images))
-    tensorboard_writer.add_image("Sample", all_grid)
     tensorboard_writer.add_image("anchor sample", anchors_grid)
     tensorboard_writer.add_image("negatives sample", negatives_grid)
     tensorboard_writer.add_image("positives sample", positives_grid)
