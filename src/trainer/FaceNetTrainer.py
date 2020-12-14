@@ -8,6 +8,8 @@ import torchvision
 import time
 import typing
 
+from utils.mytensorboard import MySummaryWriter
+
 
 # Template to modify
 class SiameseNetworkTrainer:
@@ -62,7 +64,9 @@ class SiameseNetworkTrainer:
                 target_ids = target_ids.cuda()
 
             # Extract image embedding via model output
-            anchor_output, positive_output, negative_output = self.model.forward_triple(anchor, positive, negative)
+            anchor_output, positive_output, negative_output = self.model.forward(anchor,
+                                                                                 positive,
+                                                                                 negative)
 
             # Calculate loss
             triplet_loss = self.triplet_loss_func(anchor_output, positive_output, negative_output)

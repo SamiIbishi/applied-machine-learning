@@ -41,7 +41,7 @@ class SiameseNetwork(nn.Module):
             nn.Linear(512, 256),
         )
 
-    def forward(self, x):
+    def forward_single(self, x):
         # Image Embedding
         x = self.image_embedding(x)
         x = x.view(-1, num_flat_features(x))
@@ -49,8 +49,8 @@ class SiameseNetwork(nn.Module):
 
         return x
 
-    def forward_triple(self, anchor, positive, negative):
-        anchor_output = self.forward(anchor)
-        positive_output = self.forward(positive)
-        negative_output = self.forward(negative)
+    def forward(self, anchor, positive, negative):
+        anchor_output = self.forward_single(anchor)
+        positive_output = self.forward_single(positive)
+        negative_output = self.forward_single(negative)
         return anchor_output, positive_output, negative_output
