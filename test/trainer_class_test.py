@@ -6,6 +6,7 @@ from src.data_loader import DataSplitter
 from src.model.FaceNet import SiameseNetwork
 from src.trainer.FaceNetTrainer import SiameseNetworkTrainer
 
+import time
 batch_size = 4
 
 if __name__ == '__main__':
@@ -55,8 +56,10 @@ if __name__ == '__main__':
     negatives_grid = torchvision.utils.make_grid(negatives)
 
     tensorboard_writer.add_image("anchor sample", anchors_grid)
-    tensorboard_writer.add_image("negatives sample", negatives_grid)
+    time.sleep(3)
     tensorboard_writer.add_image("positives sample", positives_grid)
+    time.sleep(5)
+    tensorboard_writer.add_image("negatives sample", negatives_grid)
 
 
     trainer.train(epochs=1)
