@@ -52,8 +52,8 @@ class MySummaryWriter(SummaryWriter):
         self.logpath = self.get_empty_logpath(overwrite_logs)
         print("logpath: ", self.logpath)
         self.batch_size = batch_size
-        self.start_tensorboard()
         self.writer = SummaryWriter(self.logpath)
+        self.start_tensorboard()
 
     def get_empty_logpath(self, overwrite_logs: bool):
         """

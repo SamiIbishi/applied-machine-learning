@@ -8,6 +8,7 @@ from typing import List, Any, Union
 
 # Torch Packages
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 # PIL Package
 from PIL import Image
@@ -46,6 +47,9 @@ class FaceRecognitionDataset(Dataset):
 
         # Update the image_filepaths to the pruned version
         self.pruned_filepaths = self._prune_filepaths()
+
+        # transforming image to tensor
+        self.to_tensor = transforms.ToTensor()
 
         # Get the triplets of original, similar, random
         self.triplets = self._create_triplets()
@@ -125,7 +129,7 @@ class FaceRecognitionDataset(Dataset):
         for filepath in triplet:
             # Resize all 3 images, default is 512x512
             image = Image.open(filepath).resize([self.image_width, self.image_height])
-            triplet_images.append(image)
+            triplet_images.append(self.to_tensor(image))
 
         # Get the label of the original image (the first image of the triplet)
         label = self.labels[image_id]
@@ -134,11 +138,11 @@ class FaceRecognitionDataset(Dataset):
         return triplet_images, label
 
 
-#dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images',
-#                                 labels_path='../data/celeba_dataset/labels.txt')
-#images, label = dataset[100]
+# dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images',
+#                                  labels_path='../data/celeba_dataset/labels.txt')
+# images, label = dataset[100]
 #
-#for image in images:
-#    image.show()
-#print(label)
-#print("length =",len(dataset))
+# for image in images:
+#     image.show()
+# print(label)
+# print("length =",len(dataset))

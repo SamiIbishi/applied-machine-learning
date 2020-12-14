@@ -2,6 +2,7 @@
 from torch.nn import TripletMarginLoss
 from torch import optim
 import torch
+import torchvision
 
 # General Packages
 import time
@@ -16,6 +17,7 @@ class SiameseNetworkTrainer:
             train_loader,
             valid_loader,
             test_loader,
+            tensorboard_writer,
             device: str = 'cpu',
             triplet_loss_func=TripletMarginLoss(margin=1.0, p=2),
             optimizer=None,
@@ -33,6 +35,9 @@ class SiameseNetworkTrainer:
         self.triplet_loss_func = triplet_loss_func
 
         self.epoch = 0
+
+        # write to tensorboard
+        self.tensorboard_writer = tensorboard_writer
 
         # if the optimizer is not initialized
         if optimizer:
@@ -88,3 +93,4 @@ class SiameseNetworkTrainer:
         # if self.test_loader is null, break
 
         pass
+
