@@ -6,12 +6,14 @@ from src.data_loader import DataSplitter
 from src.model.FaceNet import SiameseNetwork
 from src.trainer.FaceNetTrainer import SiameseNetworkTrainer
 
-batch_size = 8
+batch_size = 4
 
 if __name__ == '__main__':
+    to_pil_image = torchvision.transforms.ToPILImage()
+
     dataset = FaceRecognitionDataset(dataset_dir="../src/data/celeba_dataset/images/", labels_path="../src/data/celeba_dataset/labels.txt")
     print("Created dataset")
-    train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset)
+    train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=0.5)
     print("Splitted dataset")
     model = SiameseNetwork()
     print("Created model")
@@ -39,9 +41,23 @@ if __name__ == '__main__':
     dataiter = iter(train_loader)
     images, labels = dataiter.next()
 
-    # create grid of images
-    img_grid = torchvision.utils.make_grid(images)
+    anchors = images[0]
+    positives = images[1]
+    negatives = images[2]
 
-    tensorboard_writer.add_image('_images', img_grid)
-    tensorboard_writer.add_graph(net=model, images=images)
-    # trainer.train(epochs=1)
+    # write graph of model to tensorboard
+    #tensorboard_writer.add_graph(model, images)
+
+    anchors_grid = torchvision.utils.make_grid(anchors)
+    negatives_grid = torchvision.utils.make_grid(negatives)
+    positives_grid = torchvision.utils.make_grid(positives)
+
+    all_grid = torchvision.utils.make_grid(torch.stack(images))
+    tensorboard_writer.add_image("Sample", all_grid)
+    tensorboard_writer.add_image("anchor sample", anchors_grid)
+    tensorboard_writer.add_image("negatives sample", negatives_grid)
+    tensorboard_writer.add_image("positives sample", positives_grid)
+
+
+    trainer.train(epochs=1)
+
