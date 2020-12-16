@@ -107,27 +107,27 @@ class MySummaryWriter(SummaryWriter):
                         "independently execute '" + "tensorboard --logdir " + self.base_logdir +
                   "'")
 
-    def log_training_accuracy(self, acc, batch_index):
+    def log_training_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/training', acc, index)
 
-    def log_test_accuracy(self, acc, batch_index):
+    def log_test_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/test', acc, index)
 
-    def log_validation_accuracy(self, acc, batch_index):
+    def log_validation_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/validation', acc, index)
 
-    def log_training_loss(self, loss, batch_index):
+    def log_training_loss(self, loss: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/training', loss, index)
 
-    def log_test_loss(self, loss, batch_index):
+    def log_test_loss(self, loss: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/test', loss, index)
 
-    def log_validation_loss(self, loss, batch_index):
+    def log_validation_loss(self, loss: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/validation', loss, index)
 
@@ -142,7 +142,7 @@ class MySummaryWriter(SummaryWriter):
             global_step = None
         self.writer.add_figure(tag, figure, global_step, close, walltime)
 
-    def add_image(self, tag, img, batch_index=None, walltime=None, dataformats="CHW"):
+    def add_image(self, tag: str, img, batch_index: int = None, walltime=None, dataformats="CHW"):
         if (batch_index):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
