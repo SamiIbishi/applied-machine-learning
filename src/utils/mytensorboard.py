@@ -136,14 +136,14 @@ class MySummaryWriter(SummaryWriter):
         self.writer.add_scalar(tag, value, index)
 
     def add_figure(self, tag: str, figure, batch_index=None, close=True, walltime=None):
-        if (batch_index):
+        if (batch_index!=None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
         self.writer.add_figure(tag, figure, global_step, close, walltime)
 
     def add_image(self, tag: str, img, batch_index: int = None, walltime=None, dataformats="CHW"):
-        if (batch_index):
+        if (batch_index!=None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
