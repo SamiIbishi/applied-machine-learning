@@ -131,7 +131,11 @@ class MySummaryWriter(SummaryWriter):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/validation', loss, index)
 
-    def add_figure(self, tag, figure, batch_index=None, close=True, walltime=None):
+    def log_custom_scalar(self, tag: str, value: float, batch_index: int):
+        index = self.epoch * self.numb_batches + batch_index
+        self.writer.add_scalar(tag, value, index)
+
+    def add_figure(self, tag: str, figure, batch_index=None, close=True, walltime=None):
         if (batch_index):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
