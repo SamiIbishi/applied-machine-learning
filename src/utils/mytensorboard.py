@@ -3,6 +3,7 @@ import os
 import subprocess
 from socket import socket, AF_INET, SOCK_STREAM
 import shutil
+import webbrowser
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -37,7 +38,7 @@ class MySummaryWriter(SummaryWriter):
 
     def __init__(self,
                  numb_batches: int,
-                 base_logdir: str = os.path.join("..", "logs"),
+                 base_logdir: str = os.path.join(".", "logs"),
                  experiment_name: str = "FaceRecogniction",
                  run_name: str = "run_1",
                  epoch: int = 0,
@@ -107,6 +108,8 @@ class MySummaryWriter(SummaryWriter):
                         "independently execute '" + "tensorboard --logdir " + self.base_logdir +
                   "'")
 
+        webbrowser.open("http://" + host + ":" + str(port), new=2)
+
     def log_training_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/training', acc, index)
@@ -136,14 +139,14 @@ class MySummaryWriter(SummaryWriter):
         self.writer.add_scalar(tag, value, index)
 
     def add_figure(self, tag: str, figure, batch_index=None, close=True, walltime=None):
-        if (batch_index!=None):
+        if (batch_index != None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
         self.writer.add_figure(tag, figure, global_step, close, walltime)
 
     def add_image(self, tag: str, img, batch_index: int = None, walltime=None, dataformats="CHW"):
-        if (batch_index!=None):
+        if (batch_index != None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
