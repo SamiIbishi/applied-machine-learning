@@ -58,6 +58,7 @@ class SiameseNetworkTrainer:
     def train_epoch(self):
         start_time = time.time()
         log_frequency = 5
+
         total_loss = 0
         running_loss = 0
         for batch_idx, (images, _) in enumerate(self.train_loader):
@@ -118,6 +119,8 @@ class SiameseNetworkTrainer:
             # Distance between Anchor and Negative
             dist_an = torch.nn.functional.pairwise_distance(emb_anchor, emb_negative)
 
+            #self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
+            #self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
             # self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
             # self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
 
@@ -141,6 +144,7 @@ class SiameseNetworkTrainer:
             self.train_epoch()
             self.evaluate()
             self.epoch = e
+            self.tensorboard_writer.increment_epoch()
 
     def inference(self, anchor, positive, negative, loader=None):
 
