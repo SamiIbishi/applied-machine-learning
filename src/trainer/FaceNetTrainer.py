@@ -91,9 +91,6 @@ class SiameseNetworkTrainer:
             f"####### EPOCH {self.epoch + 1} DONE ####### (computation time: {end_time - start_time}) ##################")
 
     def evaluate(self):
-
-        self.tensorboard_writer.increment_epoch()
-
         # switch to evaluate mode
         self.model.eval()
 
@@ -136,6 +133,7 @@ class SiameseNetworkTrainer:
             self.train_epoch()
             self.evaluate()
             self.epoch = e
+            self.tensorboard_writer.increment_epoch()
 
     def inference(self, loader=None):
 
