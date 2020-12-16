@@ -93,7 +93,7 @@ class SiameseNetworkTrainer:
 
         end_time = time.time()
         print(
-            f"####### EPOCH {self.epoch} DONE ####### (computation time: {end_time - start_time}) ##################")
+            f"####### EPOCH {self.epoch + 1} DONE ####### (computation time: {end_time - start_time}) ##################")
 
     def evaluate(self):
         # switch to evaluate mode
@@ -133,18 +133,19 @@ class SiameseNetworkTrainer:
             #     self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
 
         # compute acc and log
-        # valid_acc = (100. * correct_prediction) / len(self.valid_loader)
-        # print(f'Validation accuracy: {valid_acc}')
-        # self.tensorboard_writer.log_validation_accuracy(valid_acc)
-        # return valid_acc
+        valid_acc = (100. * correct_prediction) / len(self.valid_loader)
+        print(f'Validation accuracy: {valid_acc}')
+        self.tensorboard_writer.log_validation_accuracy(valid_acc)
+        # TODO: Print some example pics to tensorboard with distances
+        return valid_acc
 
     def train(self, epochs: int = 10):
         self.epochs = epochs
         for e in range(self.epochs):
-            self.train_epoch()
-            self.evaluate()
             self.epoch = e
+            self.train_epoch()
             self.tensorboard_writer.increment_epoch()
+            self.evaluate()
 
     def inference(self, anchor, positive, negative, loader=None):
 
