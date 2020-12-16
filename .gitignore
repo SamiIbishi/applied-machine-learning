@@ -14,3 +14,9 @@ src/utils/__pycache__/
 src/data_loader/__pycache__/
 
 src/trainer/__pycache__/
+
+src/data/toy_dataset/images/
+
+src/data/toy_dataset/
+
+src/saved/models/

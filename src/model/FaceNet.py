@@ -17,7 +17,7 @@ class SiameseNetwork(nn.Module):
 
         # Default: Input shape [NxCx512x512] => Output shape [Nx16x30x30]
         # [Input] => 4x[Conv2d => MaxPool2d => PReLU] => [Output]
-        self.image_embedding = nn.Sequential(
+        self.feature_extractor = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=128, kernel_size=3),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.PReLU(num_parameters=128, init=0.3),
@@ -35,17 +35,17 @@ class SiameseNetwork(nn.Module):
             nn.PReLU(num_parameters=8, init=0.3),
         )
 
-        self.image_vector = nn.Sequential(
-            nn.Linear(1568, 512),
+        self.image_embedding = nn.Sequential(
+            nn.Linear(1568, 128),
             nn.PReLU(num_parameters=1, init=0.3),
-            nn.Linear(512, 256),
+            nn.Linear(128, 32),
         )
 
     def forward_single(self, x):
         # Image Embedding
-        x = self.image_embedding(x)
+        x = self.feature_extractor(x)
         x = x.view(-1, num_flat_features(x))
-        x = self.image_vector(x)
+        x = self.image_embedding(x)
 
         return x
 

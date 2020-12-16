@@ -1,5 +1,6 @@
 # Torch Packages
 from torch.nn import TripletMarginLoss
+import torch.nn.functional as F
 from torch import optim
 import torch
 import torchvision
@@ -10,6 +11,7 @@ import typing
 
 from src.utils.mytensorboard import MySummaryWriter
 #import src.utils.utils_images as img_util
+
 
 # Template to modify
 class SiameseNetworkTrainer:
@@ -42,6 +44,7 @@ class SiameseNetworkTrainer:
 
         # write to tensorboard
         self.tensorboard_writer = tensorboard_writer
+        self.tensorboard_writer.increment_epoch()
 
         # if the optimizer is not initialized
         if optimizer:
@@ -54,6 +57,7 @@ class SiameseNetworkTrainer:
 
     def train_epoch(self):
         start_time = time.time()
+        log_frequency = 5
         total_loss = 0
         running_loss = 0
         for batch_idx, (images, _) in enumerate(self.train_loader):
@@ -63,6 +67,8 @@ class SiameseNetworkTrainer:
             # Push tensors to GPU if available
             if torch.cuda.is_available():
                 anchor, positive, negative = anchor.cuda(), positive.cuda(), negative.cuda()
+
+            self.optimizer.zero_grad()
 
             # Extract image embedding via model output
             anchor_output, positive_output, negative_output = self.model.forward(anchor,
@@ -76,10 +82,8 @@ class SiameseNetworkTrainer:
             running_loss += triplet_loss.item()
 
             # Optimize model parameter
-            self.optimizer.zero_grad()
             self.optimizer.step()
 
-            log_frequency = 5
             if batch_idx % log_frequency == log_frequency-1:
                 self.tensorboard_writer.log_training_loss(running_loss/log_frequency, batch_idx)
                 running_loss = 0
@@ -88,12 +92,9 @@ class SiameseNetworkTrainer:
 
         end_time = time.time()
         print(
-            f"####### EPOCH {self.epoch + 1} DONE ####### (computation time: {end_time - start_time}) ##################")
+            f"####### EPOCH {self.epoch} DONE ####### (computation time: {end_time - start_time}) ##################")
 
     def evaluate(self):
-
-        self.tensorboard_writer.increment_epoch()
-
         # switch to evaluate mode
         self.model.eval()
 
@@ -117,18 +118,22 @@ class SiameseNetworkTrainer:
             # Distance between Anchor and Negative
             dist_an = torch.nn.functional.pairwise_distance(emb_anchor, emb_negative)
 
-            if (dist_ap <= self.threshold) & (dist_an >= self.threshold):
-                correct_prediction += 1
+            # self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
+            # self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
+
+            for idx in range(len(dist_ap)):
+                if (dist_ap[idx] <= self.threshold) & (dist_an[idx] >= self.threshold):
+                    correct_prediction += 1
 
             # if batch_idx == 0:
             #     fig = img_util.plot_classes_preds_face_recognition(images[0], ids[0], predictions)
             #     self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
 
         # compute acc and log
-        valid_acc = (100. * correct_prediction) / len(self.valid_loader)
-        print(f'Validation accuracy: {valid_acc}')
-
-        return valid_acc
+        # valid_acc = (100. * correct_prediction) / len(self.valid_loader)
+        # print(f'Validation accuracy: {valid_acc}')
+        # self.tensorboard_writer.log_validation_accuracy(valid_acc)
+        # return valid_acc
 
     def train(self, epochs: int = 10):
         self.epochs = epochs
@@ -137,9 +142,27 @@ class SiameseNetworkTrainer:
             self.evaluate()
             self.epoch = e
 
-    def inference(self, loader=None):
+    def inference(self, anchor, positive, negative, loader=None):
 
-        # if loader is none, use self.test_loader
-        # if self.test_loader is null, break
+        match = False
 
-        pass
+        # switch to evaluate mode
+        self.model.eval()
+
+        # Push tensors to GPU if available
+        if torch.cuda.is_available():
+            anchor, positive, negative = anchor.cuda(), positive.cuda(), negative.cuda()
+
+        # compute image embeddings
+        emb_anchor, emb_positive, emb_negative = self.model.forward(anchor, positive, negative)
+
+        # Distance between Anchor and Positive
+        dist_ap = torch.nn.functional.pairwise_distance(emb_anchor, emb_positive)
+
+        # Distance between Anchor and Negative
+        dist_an = torch.nn.functional.pairwise_distance(emb_anchor, emb_negative)
+
+        if dist_ap <= dist_an:
+            match = True
+
+        return dist_ap, dist_an, match
