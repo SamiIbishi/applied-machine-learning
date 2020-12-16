@@ -115,8 +115,8 @@ class MySummaryWriter(SummaryWriter):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/test', acc, index)
 
-    def log_validation_accuracy(self, acc: float, batch_index: int):
-        index = self.epoch * self.numb_batches + batch_index
+    def log_validation_accuracy(self, acc: float):
+        index = self.epoch * self.numb_batches
         self.writer.add_scalar('Accuracy/validation', acc, index)
 
     def log_training_loss(self, loss: float, batch_index: int):
@@ -127,8 +127,8 @@ class MySummaryWriter(SummaryWriter):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/test', loss, index)
 
-    def log_validation_loss(self, loss: float, batch_index: int):
-        index = self.epoch * self.numb_batches + batch_index
+    def log_validation_loss(self, loss: float):
+        index = self.epoch * self.numb_batches
         self.writer.add_scalar('Loss/validation', loss, index)
 
     def log_custom_scalar(self, tag: str, value: float, batch_index: int):
