@@ -54,6 +54,8 @@ class SiameseNetworkTrainer:
 
     def train_epoch(self):
         start_time = time.time()
+        log_frequency = 5
+
         total_loss = 0
         running_loss = 0
         for batch_idx, (images, _) in enumerate(self.train_loader):
@@ -79,7 +81,6 @@ class SiameseNetworkTrainer:
             self.optimizer.zero_grad()
             self.optimizer.step()
 
-            log_frequency = 5
             if batch_idx % log_frequency == log_frequency-1:
                 self.tensorboard_writer.log_training_loss(running_loss/log_frequency, batch_idx)
                 running_loss = 0
@@ -114,6 +115,9 @@ class SiameseNetworkTrainer:
             # Distance between Anchor and Negative
             dist_an = torch.nn.functional.pairwise_distance(emb_anchor, emb_negative)
 
+            #self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
+            #self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an, batch_idx) TODO: is bisher noch ein Array, kein einzelner Punkt
+
             if (dist_ap <= self.threshold) & (dist_an >= self.threshold):
                 correct_prediction += 1
 
@@ -124,6 +128,7 @@ class SiameseNetworkTrainer:
         # compute acc and log
         valid_acc = (100. * correct_prediction) / len(self.valid_loader)
         print(f'Validation accuracy: {valid_acc}')
+        self.tensorboard_writer.log_validation_accuracy(valid_acc)
 
         return valid_acc
 
