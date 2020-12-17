@@ -77,11 +77,15 @@ class FaceRecognitionDataset(Dataset):
                 samples = 0
                 # 5 adversary examples are created for each image pair of the same person
                 while samples < 5:
-                    random_id = np.random.randint(low=0, high=len(self.pruned_filepaths) - 1)
+                    random_index = np.random.randint(low=0, high=len(self.pruned_filepaths) - 1)
+                    # Get the filepath of the random image
+                    random_image_filepath = self.pruned_filepaths[random_index]
+                    # Get the ID of the image
+                    random_image_id = int(os.path.basename(random_image_filepath).split('.')[0])
                     # We do not want to have the same person as an adversary example
-                    if random_id not in similar_images and random_id != image_id:
-                        random_filepath = self._image_id_to_filepath(filepath, random_id)
-                        triplets.append([filepath, similar_filepath, random_filepath])
+                    if random_image_id not in similar_images and random_image_id != image_id:
+                        # All 3 images selected so can create a new triplet
+                        triplets.append([filepath, similar_filepath, random_image_filepath])
                         samples += 1
 
         return triplets
@@ -137,7 +141,7 @@ class FaceRecognitionDataset(Dataset):
 #dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images',
 #                                 labels_path='../data/celeba_dataset/labels.txt')
 #images, label = dataset[100]
-#
+
 #for image in images:
 #    image.show()
 #print(label)
