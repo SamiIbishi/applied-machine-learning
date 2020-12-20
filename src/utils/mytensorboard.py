@@ -3,6 +3,7 @@ import os
 import subprocess
 from socket import socket, AF_INET, SOCK_STREAM
 import shutil
+import webbrowser
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -37,7 +38,7 @@ class MySummaryWriter(SummaryWriter):
 
     def __init__(self,
                  numb_batches: int,
-                 base_logdir: str = os.path.join("..", "logs"),
+                 base_logdir: str = os.path.join(".", "logs"),
                  experiment_name: str = "FaceRecogniction",
                  run_name: str = "run_1",
                  epoch: int = 0,
@@ -52,8 +53,8 @@ class MySummaryWriter(SummaryWriter):
         self.logpath = self.get_empty_logpath(overwrite_logs)
         print("logpath: ", self.logpath)
         self.batch_size = batch_size
-        self.start_tensorboard()
         self.writer = SummaryWriter(self.logpath)
+        self.start_tensorboard()
 
     def get_empty_logpath(self, overwrite_logs: bool):
         """
@@ -107,39 +108,45 @@ class MySummaryWriter(SummaryWriter):
                         "independently execute '" + "tensorboard --logdir " + self.base_logdir +
                   "'")
 
-    def log_training_accuracy(self, acc, batch_index):
+        webbrowser.open("http://" + host + ":" + str(port), new=2)
+
+    def log_training_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/training', acc, index)
 
-    def log_test_accuracy(self, acc, batch_index):
+    def log_test_accuracy(self, acc: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Accuracy/test', acc, index)
 
-    def log_validation_accuracy(self, acc, batch_index):
-        index = self.epoch * self.numb_batches + batch_index
+    def log_validation_accuracy(self, acc: float):
+        index = self.epoch * self.numb_batches
         self.writer.add_scalar('Accuracy/validation', acc, index)
 
-    def log_training_loss(self, loss, batch_index):
+    def log_training_loss(self, loss: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/training', loss, index)
 
-    def log_test_loss(self, loss, batch_index):
+    def log_test_loss(self, loss: float, batch_index: int):
         index = self.epoch * self.numb_batches + batch_index
         self.writer.add_scalar('Loss/test', loss, index)
 
-    def log_validation_loss(self, loss, batch_index):
-        index = self.epoch * self.numb_batches + batch_index
+    def log_validation_loss(self, loss: float):
+        index = self.epoch * self.numb_batches
         self.writer.add_scalar('Loss/validation', loss, index)
 
-    def add_figure(self, tag, figure, batch_index=None, close=True, walltime=None):
-        if (batch_index):
+    def log_custom_scalar(self, tag: str, value: float, batch_index: int):
+        index = self.epoch * self.numb_batches + batch_index
+        self.writer.add_scalar(tag, value, index)
+
+    def add_figure(self, tag: str, figure, batch_index=None, close=True, walltime=None):
+        if (batch_index != None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None
         self.writer.add_figure(tag, figure, global_step, close, walltime)
 
-    def add_image(self, tag, img, batch_index=None, walltime=None, dataformats="CHW"):
-        if (batch_index):
+    def add_image(self, tag: str, img, batch_index: int = None, walltime=None, dataformats="CHW"):
+        if (batch_index != None):
             global_step = self.epoch * self.numb_batches + batch_index
         else:
             global_step = None

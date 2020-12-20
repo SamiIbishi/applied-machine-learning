@@ -58,3 +58,25 @@ def plot_classes_preds(net, images, labels, classes):
             color=("green" if preds[idx] == labels[idx].item() else "red"))
 
     return fig
+
+def plot_classes_preds_face_recognition(images, labels, predictions):
+    '''
+    Generates matplotlib Figure using a trained network, along with images
+    and labels from a batch, that shows the network's top prediction along
+    with its probability, alongside the actual label, coloring this
+    information based on whether the prediction was correct or not.
+    Uses the "images_to_probs" function.
+    '''
+    # plot the images in the batch, along with predicted and true labels
+
+    fig = plt.figure(figsize=(12, 6))
+    n = len(images)
+    for idx in np.arange(n):
+        ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
+        matplotlib_imshow(images[idx], one_channel=True)
+        ax.set_title("prediction: {0}\n(label: {1})".format(
+            predictions[idx],
+            labels[idx]),
+            color=("green" if labels[idx] == predictions[idx] else "red"))
+
+    return fig
