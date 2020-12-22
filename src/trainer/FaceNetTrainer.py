@@ -65,12 +65,10 @@ class SiameseNetworkTrainer:
         else:
             self.loss_func = get_default_loss_function()   # default loss function
 
-        # Trainings parameter
-        self.epochs = 10    # default epochs
-
         # write to tensorboard
-        self.tensorboard_writer = tensorboard_writer
-        self.tensorboard_writer.increment_epoch()
+        if tensorboard_writer:
+            self.tensorboard_writer = tensorboard_writer
+            self.tensorboard_writer.increment_epoch()
 
     def train_epoch(self, epoch) -> None:
         """
@@ -118,7 +116,8 @@ class SiameseNetworkTrainer:
             # Logging and tensorboard
             if batch_idx % log_frequency == log_frequency-1:
                 print(f"[{epoch}/{self.epochs}][{batch_idx}/{len(self.train_loader)}] => running loss: {running_loss}")
-                self.tensorboard_writer.log_training_loss(running_loss/log_frequency, batch_idx)
+                if self.tensorboard_writer:
+                    self.tensorboard_writer.log_training_loss(running_loss/log_frequency, batch_idx)
                 running_loss = 0
 
         end_time = time.time()
@@ -153,8 +152,9 @@ class SiameseNetworkTrainer:
 
             # Evaluation and logging
             for idx in range(len(dist_ap)):
-                self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap[idx], batch_idx)
-                self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an[idx], batch_idx)
+                if self.tensorboard_writer:
+                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap[idx], batch_idx)
+                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an[idx], batch_idx)
                 if dist_ap[idx] < dist_an[idx]:
                     correct_prediction += 1
 
@@ -165,7 +165,8 @@ class SiameseNetworkTrainer:
         # Compute acc. Logging and tensorboard.
         valid_acc = (100. * correct_prediction) / len(self.valid_loader)
         print(f'Validation accuracy: {valid_acc}')
-        self.tensorboard_writer.log_validation_accuracy(valid_acc)
+        if self.tensorboard_writer:
+            self.tensorboard_writer.log_validation_accuracy(valid_acc)
         # TODO: Print some example pics to tensorboard with distances
         return valid_acc
 
@@ -179,7 +180,8 @@ class SiameseNetworkTrainer:
         self.epochs = epochs
         for epoch in range(1, self.epochs+1):
             self.train_epoch(epoch)
-            self.tensorboard_writer.increment_epoch()
+            if self.tensorboard_writer:
+                self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch()
 
     def create_anchor_embeddings(self, path_to_embedding: str = './src/saved/embeddings') -> None:
