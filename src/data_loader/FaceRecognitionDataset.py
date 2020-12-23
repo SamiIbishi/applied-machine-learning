@@ -8,6 +8,7 @@ from typing import List, Any, Union
 
 # Torch Packages
 from torch.utils.data import Dataset
+from torch import Tensor
 from torchvision import transforms
 
 # Matplotlib package
@@ -36,6 +37,9 @@ class FaceRecognitionDataset(Dataset):
         :return: dataset: Dataset object with resized images and their respective labels
         """
 
+        # Anchor dict
+        self.anchor_dict = dict()
+
         # Path
         self.dataset_folder = dataset_dir
 
@@ -53,6 +57,15 @@ class FaceRecognitionDataset(Dataset):
 
         # Get the triplets of original, similar, random
         self.triplets = self._create_triplets()
+
+    def get_anchor_dict(self):
+        """ External method to retrieve the generated anchor_dict"""
+
+        return self.anchor_dict
+
+    # TODO: advanced anchor creation
+    def _choose_anchorimage(self):
+        pass
 
     def _create_person_dict(self) -> dict:
         """ Create a dict of person ID, anchor (first index) and positives """
@@ -74,6 +87,10 @@ class FaceRecognitionDataset(Dataset):
 
             # For now use the first image as anchor; later use a more complex method
             anchor = image_list[0]
+
+            # Add the anchor to the anchor_dict (only person ID and filapath needed)
+            self.anchor_dict[anchor[0]] = anchor[2]
+
             image_list.pop(0)
 
             person_dict[index] = [person_id, anchor, image_list]
@@ -104,6 +121,18 @@ class FaceRecognitionDataset(Dataset):
 
         return triplets
 
+    def load_preprocessed_image(self, path: str, height: int = 224, width: int = 224) \
+            -> Tensor:
+        """
+        :param path: filepath of the image we want to load
+        :param height: height for resize operation
+        :param width: width for resize operation
+        :return: image converted to a Tensor
+        """
+        image = Image.open(path).resize([height, width])
+
+        return self.to_tensor(image)
+
     def __len__(self) -> int:
         return len(self.triplets)
 
@@ -114,15 +143,17 @@ class FaceRecognitionDataset(Dataset):
         triplet_images = []
         for image_information in triplet:
             filepath = image_information[2]
-            # Resize all 3 images
-            image = Image.open(filepath).resize([self.image_width, self.image_height])
-            triplet_images.append(self.to_tensor(image))
+            # load all 3 images and preprocess them
+            triplet_images.append(self.load_preprocessed_image(filepath, self.image_width,
+                                                               self.image_height))
 
         # Return the resized images as a list and the label of the original (first) image
         return triplet_images, triplet[0][0]
 
 
 dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images')
+print(dataset.get_anchor_dict())
+"""
 images, label = dataset[100]
 
 for image in images:
@@ -130,3 +161,4 @@ for image in images:
     show()
 print(label)
 print("length =", len(dataset))
+"""
