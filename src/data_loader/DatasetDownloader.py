@@ -15,7 +15,7 @@ class DatasetDownloader:
     # Downloader Class to handle the dataset download and unzipping it
 
     def __init__(self, url: str, filename: str, dataset_dir: str = "../data/new_dataset/",
-                 unzip: bool = False, preprocess: bool = False):
+                 unzip: bool = False, preprocess: bool = False, number_of_positives: int = 2):
         """
         Downloads a remote data set and stores it in target directory.
 
@@ -24,7 +24,10 @@ class DatasetDownloader:
         :param dataset_dir: Path to an empty directory to save the dataset, default "../data/new_dataset/"
         :param unzip: If the data is zipped and needs to be unzipped, default 'False'
         :param preprocess: If True rearrange the dataset to be fed into a siamese network
+        :param number_of_positives: at least that many Positives per anchor required
         """
+
+        self.number_of_positives = number_of_positives
 
         # Source
         self.url = url
@@ -80,7 +83,7 @@ class DatasetDownloader:
 
         # Adapt the folder structure
         for person, image_list in persons_dict.items():
-            if len(image_list) > 1:
+            if len(image_list) > self.number_of_positives:
                 # Create a new folder for this person's images
                 os.makedirs(join(self.dataset_folder, person))
                 # Copy each image in the list to this new directory
@@ -106,4 +109,4 @@ if not os.path.exists("../data/celeba_dataset"):
 
     DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
                       url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
-                      filename="images.zip", unzip=True, preprocess=True)
+                      filename="images.zip", unzip=True, preprocess=True, number_of_positives=3)
