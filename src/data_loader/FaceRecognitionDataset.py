@@ -24,8 +24,8 @@ from re import sub
 class FaceRecognitionDataset(Dataset):
     # Dataset class for handling .jpg files in celeba dataset
 
-    def __init__(self, dataset_dir: str, image_width: int = 256,
-                 image_height: int = 256):
+    def __init__(self, dataset_dir: str, image_width: int = 224,
+                 image_height: int = 224):
         """
         Creates a data set object from given data set directory.
 
