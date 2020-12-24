@@ -14,7 +14,7 @@ from zipfile import ZipFile
 class DatasetDownloader:
     # Downloader Class to handle the dataset download and unzipping it
 
-    def __init__(self, url: str, filename: str, dataset_dir: str = "../data/new_dataset/",
+    def __init__(self, url: str, filename: str, dataset_dir: str = "./data/new_dataset/",
                  unzip: bool = False, preprocess: bool = False, number_of_positives: int = 2):
         """
         Downloads a remote data set and stores it in target directory.
@@ -97,17 +97,21 @@ class DatasetDownloader:
 
 
 # The following code downloads our celeba dataset and creates the directories if necessary
-if not os.path.exists("../data"):
-    os.makedirs("../data")
+data_basedir = "../../data"
+if not os.path.exists(data_basedir):
+    os.makedirs(data_basedir)
 
-if not os.path.exists("../data/celeba_dataset"):
-    os.makedirs("../data/celeba_dataset")
-    os.makedirs("../data/celeba_dataset/images")
+if not os.path.exists(data_basedir + "/celeba_dataset"):
+    print("downloading data")
+    os.makedirs(data_basedir + "/celeba_dataset")
+    os.makedirs(data_basedir + "/celeba_dataset/images")
 
-    DatasetDownloader(dataset_dir="../data/celeba_dataset",
+    DatasetDownloader(dataset_dir=data_basedir + "/celeba_dataset",
                       url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
                       filename="labels.txt", unzip=False)
 
-    DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
+    DatasetDownloader(dataset_dir=data_basedir + "/celeba_dataset/images",
                       url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
                       filename="images.zip", unzip=True, preprocess=True, number_of_positives=4)
+else:
+    print("not downloading data")
