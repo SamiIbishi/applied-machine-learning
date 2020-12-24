@@ -38,7 +38,7 @@ class MySummaryWriter(SummaryWriter):
 
     def __init__(self,
                  numb_batches: int,
-                 base_logdir: str = os.path.join(".", "logs"),
+                 base_logdir: str = os.path.join("..", "saved", "logs"),
                  experiment_name: str = "FaceRecogniction",
                  run_name: str = "run_1",
                  epoch: int = 0,
