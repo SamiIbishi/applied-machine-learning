@@ -48,7 +48,7 @@ class SiameseNetworkTrainer:
 
         # Get trainable parameters
         params_to_update = []
-        for name, param in self.model.parameters():
+        for param in self.model.parameters():
             if param.requires_grad:
                 params_to_update.append(param)
 
@@ -223,7 +223,8 @@ class SiameseNetworkTrainer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
 
-        self.save_training(path_to_saved)
+        if path_to_saved:
+            self.save_training(path_to_saved)
 
     def save_training(self, path_to_saved: str = "./src/saved/trained_models/"):
         """
@@ -245,7 +246,7 @@ class SiameseNetworkTrainer:
 
         # Validate path to current training directory
         if not os.path.exists(trainings_dir_path):
-            os.makedirs(path)
+            os.makedirs(trainings_dir_path)
 
         # Save model
         torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
@@ -257,7 +258,6 @@ class SiameseNetworkTrainer:
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,
-                'pretrained_model': self.model.feature_extractor
         }
 
         if self.optimizer_args:
