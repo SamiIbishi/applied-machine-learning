@@ -24,7 +24,7 @@ batch_size=16
 learning_rates =  [0.001, 0.01, 0.0001]
 pretrained_models = [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.VGG19, "VGG19"), (PretrainedModels.DenseNet, "DenseNet")]
 regularizations = [] #ToDo wo können wir die einbauen?
-epochs = 1
+epochs = 15
 val_ratio=0.1
 log_frequency = 10
 
