@@ -90,9 +90,10 @@ class DatasetDownloader:
                 for image in image_list:
                     os.replace(join(self.dataset_folder, image),
                                join(self.dataset_folder, person, image))
-            # Else remove the single image
+            # Else remove the images (too few samples)
             else:
-                os.remove(join(self.dataset_folder, image_list[0]))
+                for image in image_list:
+                    os.remove(join(self.dataset_folder, image))
 
 
 # The following code downloads our celeba dataset and creates the directories if necessary
@@ -109,4 +110,4 @@ if not os.path.exists("../data/celeba_dataset"):
 
     DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
                       url='https://drive.google.com/uc?id=1-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
-                      filename="images.zip", unzip=True, preprocess=True, number_of_positives=3)
+                      filename="images.zip", unzip=True, preprocess=True, number_of_positives=4)
