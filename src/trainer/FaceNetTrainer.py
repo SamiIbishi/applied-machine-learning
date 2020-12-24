@@ -81,7 +81,6 @@ class SiameseNetworkTrainer:
         # write to tensorboard
         if tensorboard_writer:
             self.tensorboard_writer = tensorboard_writer
-            self.tensorboard_writer.increment_epoch()
 
     def train_epoch(self, epoch) -> None:
         """
@@ -146,6 +145,7 @@ class SiameseNetworkTrainer:
         self.model.eval()
 
         correct_prediction = 0
+        total_prediction = 0
         running_loss = 0
         for batch_idx, (images, ids) in enumerate(self.valid_loader):
             # Get input from triplet 'images'
@@ -179,7 +179,8 @@ class SiameseNetworkTrainer:
 
             # Evaluation and logging
             for idx in range(len(dist_ap)):
-                if self.tensorboard_writer:
+                total_prediction += 1
+                if self.tensorboard_writer: #ToDo ggf seltener loggen
                     self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap[idx], batch_idx)
                     self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an[idx], batch_idx)
                 if dist_ap[idx] < dist_an[idx]:
@@ -190,7 +191,7 @@ class SiameseNetworkTrainer:
             #     self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
 
         # Compute acc. Logging and tensorboard.
-        valid_acc = (100. * correct_prediction) / len(self.valid_loader)
+        valid_acc = (100. * correct_prediction) / total_prediction
         print(f'Validation accuracy: {valid_acc}')
         if self.tensorboard_writer:
             self.tensorboard_writer.log_validation_accuracy(valid_acc)
@@ -224,19 +225,14 @@ class SiameseNetworkTrainer:
 
         self.save_training(path_to_saved)
 
-    def save_training(self, path_to_saved: str = None):
+    def save_training(self, path_to_saved: str = "./src/saved/trained_models/"):
         """
 
         :param path_to_saved:
         :return:
         """
 
-        # Default path
-        path = "./src/saved/trained_models/"
-
-        # Update path if input is given
-        if path == path_to_saved:
-            path = path_to_saved
+        path = path_to_saved
 
         # Validate path to directory 'trained_models'
         if not os.path.exists(path):
@@ -256,9 +252,12 @@ class SiameseNetworkTrainer:
 
         # Save hyperparameter
         hyperparameter = {
+                'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
+                'git_commit_id': "GDFGFG", #ToDo: manually edit,
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,
+                'pretrained_model': self.model.feature_extractor
         }
 
         if self.optimizer_args:
