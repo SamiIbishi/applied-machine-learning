@@ -151,14 +151,3 @@ class FaceRecognitionDataset(Dataset):
         return triplet_images, triplet[0][0]
 
 
-dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images')
-print(dataset.get_anchor_dict())
-"""
-images, label = dataset[100]
-
-for image in images:
-    imshow(image.permute(1, 2, 0))
-    show()
-print(label)
-print("length =", len(dataset))
-"""
