@@ -254,7 +254,7 @@ class SiameseNetworkTrainer:
         # Save hyperparameter
         hyperparameter = {
                 'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
-                'git_commit_id': "GDFGFG", #ToDo: manually edit,
+                'git_commit_id': "762054f", #ToDo: manually edit,
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,
