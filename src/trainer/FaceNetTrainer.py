@@ -1,11 +1,12 @@
+# General Packages
+import os
+import time
+import typing
+import datetime
+
 # Torch Packages
 import torch
 import torch.nn.functional as f
-
-# General Packages
-import time
-import json
-import typing
 
 # Utilities
 from src.utils.mytensorboard import MySummaryWriter
@@ -21,12 +22,14 @@ class SiameseNetworkTrainer:
             model,
             train_loader,
             valid_loader,
-            test_loader = None,
+            test_loader=None,
+            epochs: int = 10,
+            log_frequency: int = 10,
             tensorboard_writer: MySummaryWriter = None,
             optimizer: typing.Any = None,
-            optimizer_args: typing.Optional[typing.Dict] = None,
+            optimizer_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
             loss_func: typing.Any = None,
-            loss_func_args: typing.Optional[typing.Dict] = None,
+            loss_func_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
             device: str = 'cpu',
     ):
 
@@ -43,19 +46,29 @@ class SiameseNetworkTrainer:
             self.device = device
             self.model.cuda()
 
+        # Get trainable parameters
+        params_to_update = []
+        for name, param in self.model.parameters():
+            if param.requires_grad:
+                params_to_update.append(param)
+
+        # Hyperparameter - Epoch & log-frequency
+        self.epochs = epochs
+        self.log_frequency = log_frequency
+
         # Hyperparameter - Optimizer
+        self.optimizer_args = optimizer_args
         if isinstance(optimizer, str) or isinstance(optimizer, CustomOptimizer):
             if optimizer_args is None:
                 raise ValueError(f'Arguments dictionary for custom optimizer is missing.')
-            self.optimizer = get_optimizer(optimizer, self.model.parameters(), **optimizer_args)
+            self.optimizer = get_optimizer(optimizer, params_to_update, **optimizer_args)
         elif optimizer:
             self.optimizer = optimizer
         else:
-            self.optimizer = get_default_optimizer(self.model.parameters())     # default optimizer
+            self.optimizer = get_default_optimizer(params_to_update)     # default optimizer
 
         # Hyperparameter - Loss Function
-        self.lambda1 = 0.5
-        self.lambda2 = 0.01
+        self.loss_func_args = loss_func_args
         if isinstance(loss_func, str) or isinstance(loss_func, CustomLossFunctions):
             if loss_func_args is None:
                 raise ValueError(f'Arguments dictionary for custom loss function is missing.')
@@ -77,53 +90,53 @@ class SiameseNetworkTrainer:
         :param epoch: Current epoch.
         :return: None
         """
-        print(f"####### EPOCH {epoch} Start #################################################################")
+        print(5 * "#" + f" EPOCH {epoch:02d} Start - Training " + 15 * "#")
+
+        # Set model in trainings mode
+        self.model.train()
 
         start_time = time.time()
-        log_frequency = 5
-
         running_loss = 0
         for batch_idx, (images, _) in enumerate(self.train_loader):
             # Get input from data loader
             anchor, positive, negative = images
 
             # Push tensors to GPU if available
-            if torch.cuda.is_available():
+            if self.device == 'cuda':
                 anchor, positive, negative = anchor.cuda(), positive.cuda(), negative.cuda()
 
-            # Clear gradients before calculating loss
-            # especially before loss.backward() is called, otherwise gradients will be accumulated
-            self.optimizer.zero_grad()
+            with torch.set_grad_enabled(True):
+                # Clear gradients before calculating loss
+                self.optimizer.zero_grad()
 
-            # Extract image embedding via model output
-            anchor_output, positive_output, negative_output = self.model.forward(anchor, positive, negative)
+                # Extract image embedding via model output
+                anchor_output, positive_output, negative_output = self.model.forward(anchor, positive, negative)
 
-            # Calculate loss
-            # # LossFunc
-            triplet_loss = self.loss_func(anchor_output, positive_output, negative_output)
-            # # (L1 + L2) Regularization loss
-            all_image_embedding_params = torch.cat([x.view(-1) for x in self.model.image_embedding.parameters()])
-            l1_regularization = self.lambda1 * torch.norm(all_image_embedding_params, 1)
-            l2_regularization = self.lambda2 * torch.norm(all_image_embedding_params, 2)
-            # # Sum all losses
-            loss = triplet_loss + l1_regularization + l2_regularization
-            loss.backward()
-            running_loss += loss.item()
+                # Calculate loss
+                triplet_loss = self.loss_func(anchor_output, positive_output, negative_output)
+                triplet_loss.backward()
 
-            # Optimize model parameter
-            self.optimizer.step()
+                # Optimize model parameter
+                self.optimizer.step()
+
+            # Statistics
+            running_loss += triplet_loss.item() * anchor_output.size(0)
 
             # Logging and tensorboard
-            if batch_idx % log_frequency == log_frequency-1:
-                print(f"[{epoch}/{self.epochs}][{batch_idx}/{len(self.train_loader)}] => running loss: {running_loss}")
+            if batch_idx % self.log_frequency == self.log_frequency-1:
+                header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
+                epoch_loss = running_loss / len(self.train_loader)
+                print(f"{header} => running trainings loss: {epoch_loss}")
                 if self.tensorboard_writer:
-                    self.tensorboard_writer.log_training_loss(running_loss/log_frequency, batch_idx)
+                    self.tensorboard_writer.log_training_loss(running_loss/self.log_frequency, batch_idx)
                 running_loss = 0
 
-        end_time = time.time()
-        print(f"####### EPOCH {epoch} DONE ####### (computation time: {end_time - start_time}) #############")
+        duration = time.time() - start_time
+        minutes = round(duration // 60, 0)
+        seconds = round(duration % 60, 0)
+        print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s" + 5 * "#")
 
-    def evaluate_epoch(self):
+    def evaluate_epoch(self, epoch):
         """
         Evaluates the current model accuracy in the current epoch/batch.
 
@@ -133,16 +146,30 @@ class SiameseNetworkTrainer:
         self.model.eval()
 
         correct_prediction = 0
+        running_loss = 0
         for batch_idx, (images, ids) in enumerate(self.valid_loader):
             # Get input from triplet 'images'
             anchor, positive, negative = images
 
             # Push tensors to GPU if available
-            if torch.cuda.is_available():
+            if self.device == 'cuda':
                 anchor, positive, negative = anchor.cuda(), positive.cuda(), negative.cuda()
 
             # Compute image embeddings
-            emb_anchor, emb_positive, emb_negative = self.model.forward(anchor, positive, negative)
+            with torch.set_grad_enabled(False):
+                emb_anchor, emb_positive, emb_negative = self.model.forward(anchor, positive, negative)
+
+                # Calculate loss
+                triplet_loss = self.loss_func(emb_anchor, emb_positive, emb_negative)
+
+            # Statistics
+            running_loss += triplet_loss.item() * emb_anchor.size(0)
+
+            # Logging and tensorboard
+            if batch_idx % self.log_frequency == self.log_frequency - 1:
+                header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.valid_loader)}]"
+                epoch_loss = running_loss / len(self.valid_loader)
+                print(f"{header} => running validation loss: {epoch_loss}")
 
             # Distance between Anchor and Positive
             dist_ap = f.pairwise_distance(emb_anchor, emb_positive, p=2)
@@ -170,38 +197,76 @@ class SiameseNetworkTrainer:
         # TODO: Print some example pics to tensorboard with distances
         return valid_acc
 
-    def train(self, epochs: int = 10) -> None:
+    def train(self,
+              path_to_saved: str = None,
+              epochs: typing.Optional[int] = None,
+              log_frequency: typing.Optional[int] = None) -> None:
         """
         Fit model on trainings data and evaluate on validation set.
 
+        :param path_to_saved:
         :param epochs: Number of trainings epochs.
+        :param log_frequency: Frequency in which information is logged.
         :return: None
         """
-        self.epochs = epochs
+
+        if epochs:
+            self.epochs = epochs
+
+        if log_frequency:
+            self.log_frequency = log_frequency
+
         for epoch in range(1, self.epochs+1):
             self.train_epoch(epoch)
             if self.tensorboard_writer:
                 self.tensorboard_writer.increment_epoch()
-            self.evaluate_epoch()
+            self.evaluate_epoch(epoch)
 
-    def create_anchor_embeddings(self, path_to_embedding: str = './src/saved/embeddings') -> None:
+        self.save_training(path_to_saved)
+
+    def save_training(self, path_to_saved: str = None):
         """
-        After the model is trained. A dictionary with all anchor embeddings will be created and stored.
-        These embeddings will be used for evaluation and inference purposes.
 
-        :param path_to_embedding: Path to embeddings directory.
-        :return: None
+        :param path_to_saved:
+        :return:
         """
-        anchor_embedding = dict()
-        for batch_idx, (images, ids) in enumerate(self.train_loader):
-            anchors, _, _ = images
-            emb_anchors = self.model.forward_single(anchors)
 
-            for idx in range(len(emb_anchors)):
-                if ids[idx] in anchor_embedding.keys():
-                    continue
+        # Default path
+        path = "./src/saved/trained_models/"
 
-                anchor_embedding[ids[idx]] = emb_anchors[idx]
+        # Update path if input is given
+        if path == path_to_saved:
+            path = path_to_saved
 
-        with open(path_to_embedding + f'/anchor_embedding_{time.time()}.json', 'w') as file:
-            json.dump(anchor_embedding, file)
+        # Validate path to directory 'trained_models'
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        # get date/time after model is trained
+        date = datetime.datetime.now()
+        trainings_dir = date.strftime('model_date_%Y_%m_%d_time_%H_%M')
+        trainings_dir_path = os.path.join(path, trainings_dir)
+
+        # Validate path to current training directory
+        if not os.path.exists(trainings_dir_path):
+            os.makedirs(path)
+
+        # Save model
+        torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
+
+        # Save hyperparameter
+        hyperparameter = {
+                'optimizer': self.optimizer,
+                'loss_func': self.loss_func,
+                'epochs': self.epochs,
+        }
+
+        if self.optimizer_args:
+            for opt_arg, opt_arg_value in self.optimizer_args.items():
+                hyperparameter['optimizer_arg_' + opt_arg] = opt_arg_value
+
+        if self.loss_func_args:
+            for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
+                hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
+
+        torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter'))
