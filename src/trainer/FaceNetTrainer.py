@@ -96,6 +96,8 @@ class SiameseNetworkTrainer:
 
         start_time = time.time()
         running_loss = 0
+        total_loss=0
+
         for batch_idx, (images, _) in enumerate(self.train_loader):
             # Get input from data loader
             anchor, positive, negative = images
@@ -120,6 +122,7 @@ class SiameseNetworkTrainer:
 
             # Statistics
             running_loss += triplet_loss.item() * anchor_output.size(0)
+            total_loss += triplet_loss.item() * anchor_output.size(0)
 
             # Logging and tensorboard
             if batch_idx % self.log_frequency == self.log_frequency-1:
@@ -134,6 +137,8 @@ class SiameseNetworkTrainer:
         minutes = round(duration // 60, 0)
         seconds = round(duration % 60, 0)
         print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s" + 5 * "#")
+
+        return total_loss
 
     def evaluate_epoch(self, epoch):
         """
@@ -218,10 +223,13 @@ class SiameseNetworkTrainer:
             self.log_frequency = log_frequency
 
         for epoch in range(1, self.epochs+1):
-            self.train_epoch(epoch)
+            epoch_loss = self.train_epoch(epoch)
             if self.tensorboard_writer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
+            if epoch_loss<10:
+                print(f"##### Interrupt training because training loss is {epoch_loss} and very good")
+                break
 
         if path_to_saved:
             self.save_training(path_to_saved)
@@ -254,7 +262,7 @@ class SiameseNetworkTrainer:
         # Save hyperparameter
         hyperparameter = {
                 'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
-                'git_commit_id': "762054f", #ToDo: manually edit,
+                'git_commit_id': "6dff1b7", #ToDo: manually edit,
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,
