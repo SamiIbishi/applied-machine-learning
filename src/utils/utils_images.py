@@ -2,7 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn.functional as F
+import torchvision
 
+to_pil = torchvision.transforms.ToPILImage()
 
 def images_to_probs(net, images):
     '''
@@ -58,6 +60,27 @@ def plot_classes_preds(net, images, labels, classes):
             color=("green" if preds[idx] == labels[idx].item() else "red"))
 
     return fig
+
+def plot_images_with_distances(images, dist_an, dist_ap):
+    fig, ax_arr = plt.subplots(len(images), 3, figsize=(16, 8))
+    for j, row in enumerate(ax_arr):
+        print(
+            '--------------------------------------------------------------------------------------')
+        for i, ax in enumerate(row):
+            img = to_pil(images[j][0][i])
+            if i == 0:
+                ax.set_title(f'Anchor')
+            else:
+                match = dist_ap[j]<dist_an[j]
+                print(
+                    f'Row j={j}, Distance between Anchor and Positive: {dist_ap[j].item()}, Distance between Anchor and Negative: {dist_an[j].item()}')
+                if i == 1:
+                    ax.set_title(f'Positive Match Anchor: {match}, dist_ap: {dist_ap[j].item()}')
+                if i == 2:
+                    ax.set_title(f'Negative Match Anchor: {not match}, dist_an: {dist_an[j].item()}')
+            ax.imshow(img)
+
+    fig.suptitle('Displaying random image samples from trainings data set', fontsize=16)
 
 def plot_classes_preds_face_recognition(images, labels, predictions):
     '''

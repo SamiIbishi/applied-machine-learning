@@ -12,7 +12,7 @@ import torch.nn.functional as f
 from src.utils.mytensorboard import MySummaryWriter
 from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_default_optimizer
 from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, get_default_loss_function
-#import src.utils.utils_images as img_util
+import src.utils.utils_images as img_util
 
 
 # Template to modify
@@ -199,6 +199,9 @@ class SiameseNetworkTrainer:
                 running_dist_ap = 0
                 running_dist_an = 0
 
+            if batch_idx==0 and self.tensorboard_writer:#Print the first batch of images with their distances to tensorboard
+                fig = img_util.plot_images_with_distances(images=images,dist_an=dist_an, dist_ap=dist_ap)
+                self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
 
 
         # Compute acc. Logging and tensorboard.
