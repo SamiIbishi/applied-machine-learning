@@ -22,13 +22,18 @@ DatasetDownloader(dataset_dir="../data/celeba_dataset",
 
 batch_size=16
 learning_rates =  [0.001, 0.01, 0.0001]
-pretrained_models = [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.VGG19, "VGG19"), (PretrainedModels.DenseNet, "DenseNet")]
+pretrained_models = [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"), (PretrainedModels.VGG19, "VGG19")]
 regularizations = [] #ToDo wo können wir die einbauen?
-epochs = 15
+epochs = 50
 val_ratio=0.1
 log_frequency = 10
+use_full_dataset = False
 
-dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset/images/")
+if use_full_dataset:
+    dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset/images/")
+else:
+    dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset_small/images/")
+
 print("Created dataset, len:", len(dataset))
 train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=val_ratio)
 
@@ -53,7 +58,7 @@ for pretrained_model, name in pretrained_models:
     for lr in learning_rates:
         print(f"################# Training {name}, {lr} for {epochs} epochs")
         # init tensorboardwriter
-        tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader), experiment_name="FaceNet_TripletNetwork", run_name=name + str(lr), batch_size=batch_size)
+        tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader), experiment_name="FaceNet_TripletNetwork_3", run_name=name + "_"+ str(lr), batch_size=batch_size)
 
         # init model and trainer
         model = SiameseNetwork(pretrained_model=pretrained_model)
