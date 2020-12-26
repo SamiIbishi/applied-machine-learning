@@ -62,25 +62,28 @@ def plot_classes_preds(net, images, labels, classes):
     return fig
 
 def plot_images_with_distances(images, dist_an, dist_ap):
-    fig, ax_arr = plt.subplots(len(images), 3, figsize=(16, 8))
-    for j, row in enumerate(ax_arr):
-        print(
-            '--------------------------------------------------------------------------------------')
+    batch_size = len(images[0])
+
+    fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3*batch_size))
+    for idx, row in enumerate(ax_arr):
+
         for i, ax in enumerate(row):
-            img = to_pil(images[j][0][i])
+            img = to_pil(images[i][idx])
             if i == 0:
                 ax.set_title(f'Anchor')
             else:
-                match = dist_ap[j]<dist_an[j]
-                print(
-                    f'Row j={j}, Distance between Anchor and Positive: {dist_ap[j].item()}, Distance between Anchor and Negative: {dist_an[j].item()}')
+                match = dist_ap[idx]<dist_an[idx]
                 if i == 1:
-                    ax.set_title(f'Positive Match Anchor: {match}, dist_ap: {dist_ap[j].item()}')
+                    ax_title = f'Positive Match Anchor: {match}\ndist_ap: {dist_ap[idx].item()}'
                 if i == 2:
-                    ax.set_title(f'Negative Match Anchor: {not match}, dist_an: {dist_an[j].item()}')
+                    ax_title = f'Negative Match Anchor: {not match}\ndist_an: {dist_an[idx].item()}'
+
+                ax.set_title(ax_title, color= "green" if match else "red")
             ax.imshow(img)
 
     fig.suptitle('Displaying random image samples from trainings data set', fontsize=16)
+
+    return fig
 
 def plot_classes_preds_face_recognition(images, labels, predictions):
     '''
