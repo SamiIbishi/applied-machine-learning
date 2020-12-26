@@ -152,6 +152,9 @@ class SiameseNetworkTrainer:
         correct_prediction = 0
         total_prediction = 0
         running_loss = 0
+        running_dist_ap = 0
+        running_dist_an = 0
+
         for batch_idx, (images, ids) in enumerate(self.valid_loader):
             # Get input from triplet 'images'
             anchor, positive, negative = images
@@ -185,15 +188,18 @@ class SiameseNetworkTrainer:
             # Evaluation and logging
             for idx in range(len(dist_ap)):
                 total_prediction += 1
-                if self.tensorboard_writer: #ToDo ggf seltener loggen
-                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap[idx], batch_idx)
-                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an[idx], batch_idx)
+                running_dist_an += dist_an[idx]
+                running_dist_ap += dist_an[idx]
                 if dist_ap[idx] < dist_an[idx]:
                     correct_prediction += 1
 
-            # if batch_idx == 0:
-            #     fig = img_util.plot_classes_preds_face_recognition(images[0], ids[0], predictions)
-            #     self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
+            if self.tensorboard_writer and batch_idx % self.log_frequency == self.log_frequency-1:
+                self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap, batch_idx)
+                self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an, batch_idx)
+                running_dist_ap = 0
+                running_dist_an = 0
+
+
 
         # Compute acc. Logging and tensorboard.
         valid_acc = (100. * correct_prediction) / total_prediction
