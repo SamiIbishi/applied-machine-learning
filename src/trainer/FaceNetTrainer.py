@@ -31,12 +31,15 @@ class SiameseNetworkTrainer:
             loss_func: typing.Any = None,
             loss_func_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
             device: str = 'cpu',
+            anchor_dict: dict = None
     ):
 
         # Data loader
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.test_loader = test_loader
+
+        self.anchor_dict = anchor_dict
 
         # Model
         self.model = model
