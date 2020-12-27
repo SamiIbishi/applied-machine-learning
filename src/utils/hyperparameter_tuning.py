@@ -1,4 +1,5 @@
 import os
+import time
 
 import torch
 
@@ -20,6 +21,7 @@ DatasetDownloader(dataset_dir="../data/celeba_dataset",
                    filename="labels.txt", unzip=False)'''
 
 
+# Configurations
 batch_size=16
 learning_rates =  [0.001, 0.01, 0.0001]
 pretrained_models = [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"), (PretrainedModels.VGG19, "VGG19")]
@@ -28,6 +30,8 @@ epochs = 50
 val_ratio=0.1
 log_frequency = 10
 use_full_dataset = False
+experiment_name = "Test" #"FaceNet_TripletNetwork_4"
+device = "cuda"
 
 if use_full_dataset:
     dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset/images/")
@@ -48,21 +52,35 @@ train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
 val_loader = torch.utils.data.DataLoader(dataset=val_dataset,
                                          batch_size=batch_size,
                                          num_workers=4,
-                                         shuffle=False, sampler=None,
+                                         shuffle=True, sampler=None,
                                          collate_fn=None)
 print("Created data loaders")
 
-
+person_dict = dataset._create_person_dict()
+id_anchor_dict = dataset.get_personid_anchor_dict(person_dict)
+print(f"anchor_dict: {id_anchor_dict}")
 
 for pretrained_model, name in pretrained_models:
     for lr in learning_rates:
         print(f"################# Training {name}, {lr} for {epochs} epochs")
         # init tensorboardwriter
-        tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader), experiment_name="FaceNet_TripletNetwork_3", run_name=name + "_"+ str(lr), batch_size=batch_size)
+        tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader), experiment_name=experiment_name, run_name=name + "_"+ str(lr), batch_size=batch_size)
+
+
 
         # init model and trainer
-        model = SiameseNetwork(pretrained_model=pretrained_model)
+        model = SiameseNetwork(pretrained_model=pretrained_model, device=device)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+        # Log Model to tensorboard
+        images, ids = iter(train_loader).next()
+        if device=="cuda" and torch.cuda.is_available():
+            images = [images[0].cuda(), images[1].cuda(), images[2].cuda()]
+            model = model.cuda()
+        tensorboard_writer.add_graph(model, images)
+
+        time.sleep(10)
+        print("Wrote model graph to tensorboard")
 
         trainer = FaceNetTrainer.SiameseNetworkTrainer(
             model=model,
@@ -70,8 +88,9 @@ for pretrained_model, name in pretrained_models:
             valid_loader=val_loader,
             optimizer=optimizer,
             tensorboard_writer=tensorboard_writer,
-            device="cuda",
-            log_frequency=log_frequency
+            device=device,
+            log_frequency=log_frequency,
+            anchor_dict=id_anchor_dict
         )
 
 
