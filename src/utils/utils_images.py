@@ -81,11 +81,11 @@ def plot_images_with_distances(images, dist_an, dist_ap):
                 ax.set_title(ax_title, color= "green" if match else "red")
             ax.imshow(img)
 
-    fig.suptitle('Displaying random image samples from trainings data set', fontsize=16)
+    fig.suptitle('Displaying random triplets with their predicted distances', fontsize=16)
 
     return fig
 
-def plot_classes_preds_face_recognition(images, labels, predictions):
+def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_matches=True):
     '''
     Generates matplotlib Figure using a trained network, along with images
     and labels from a batch, that shows the network's top prediction along
@@ -95,14 +95,37 @@ def plot_classes_preds_face_recognition(images, labels, predictions):
     '''
     # plot the images in the batch, along with predicted and true labels
 
-    fig = plt.figure(figsize=(12, 6))
+    fig = plt.figure(figsize=(2.5*len(images), 3))
     n = len(images)
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
-        matplotlib_imshow(images[idx], one_channel=True)
-        ax.set_title("prediction: {0}\n(label: {1})".format(
-            predictions[idx],
-            labels[idx]),
-            color=("green" if labels[idx] == predictions[idx] else "red"))
+
+        img = to_pil(images[idx])
+        if fuzzy_matches:
+            if int(predictions[idx][0][0]) == int(labels[idx]):
+                match_dist = predictions[idx][0][1]
+                title = f"True match:\ndist: {match_dist}\n(label: {labels[idx]})"
+                color = "green"
+            else:
+                fuzzy_match = False
+                for (i, match) in enumerate(predictions[idx]):
+                    if int(labels[idx]) == int(match[0]):
+                        fuzzy_match = True
+                        fuzz_match_idx = i
+                        match_dist = match[1]
+                if fuzzy_match:
+                    title = f"fuzzy match:\npos: {fuzz_match_idx}, dist: {match_dist}\n(label: {labels[idx]})"
+                    color = "orange"
+                else:
+                    title = f"Wrong prediction:\n(label: {labels[idx]})"
+                    color = "red"
+        else:
+            title = f"prediction: {predictions[idx]}\n(label: {labels[idx]})"
+            color = "green" if int(labels[idx]) == int(predictions[idx]) else "red"
+
+        ax.imshow(img)
+        ax.set_title(title, color=color)
+
+    fig.suptitle('Displaying random positive images with their predictions', fontsize=16)
 
     return fig
