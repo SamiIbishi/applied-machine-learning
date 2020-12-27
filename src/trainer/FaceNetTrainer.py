@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as f
 
 # Utilities
-from src.utils.mytensorboard import MySummaryWriter
+from src.utils.utils_tensorboard import MySummaryWriter
 from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_default_optimizer
 from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, get_default_loss_function
 import src.utils.utils_images as img_util
@@ -239,12 +239,41 @@ class SiameseNetworkTrainer:
             if self.tensorboard_writer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
+
+            if self.tensorboard_writer:
+                batch = iter(self.valid_loader).next()
+                self.inference_to_tensorboard(batch)
+
             if epoch_loss<10:
                 print(f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
 
         if path_to_saved:
             self.save_training(path_to_saved)
+
+    def inference_to_tensorboard(self, batch, fuzzy_matches: bool = True):
+        """
+        Logs the positives of one batch to tensorboard with the prediction and the inference
+        :param batch: the batch incl anchors, positives, negatives and the ids
+        :param fuzzy_matches:
+        :return:
+        """
+        (images, ids) = batch
+
+        if self.tensorboard_writer:  # log inference on some pics
+            self.model.create_anchor_embeddings(anchor_dict=self.anchor_dict)
+
+            positives = images[1]
+            predicted_ids = []
+            for idx in range(len(ids)):
+                true_id = ids[idx]
+                image = positives[idx]
+                if self.device == "cuda":
+                    image = image.cuda()
+                (predicted_id, comment) = self.model.inference(image, fuzzy_matches=fuzzy_matches, use_threshold=False)
+                predicted_ids.append(predicted_id)
+            fig = img_util.plot_classes_preds_face_recognition(positives, ids, predicted_ids, fuzzy_matches)
+            self.tensorboard_writer.add_figure("inference", fig, 0)
 
     def save_training(self, path_to_saved: str = "./src/saved/trained_models/"):
         """
@@ -274,7 +303,7 @@ class SiameseNetworkTrainer:
         # Save hyperparameter
         hyperparameter = {
                 'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
-                'git_commit_id': "6dff1b7", #ToDo: manually edit,
+                'git_commit_id': "70b70a7", #ToDo: manually edit,
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,
