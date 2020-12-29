@@ -1,23 +1,23 @@
 import torch
 import torchvision
-from utils import mytensorboard
+from src.utils import utils_tensorboard
 from src.data_loader.FaceRecognitionDataset import FaceRecognitionDataset
 from src.data_loader import DataSplitter
 from src.model.FaceNet import SiameseNetwork
 from src.trainer.FaceNetTrainer import SiameseNetworkTrainer
 
 import time
-import utils.utils_images as img_util
+import src.utils.utils_images as img_util
 
-batch_size = 4
+batch_size = 16
 
 
 if __name__ == '__main__':
     to_pil_image = torchvision.transforms.ToPILImage()
 
-    dataset = FaceRecognitionDataset(dataset_dir="../src/data/celeba_dataset/images/", labels_path="../src/data/celeba_dataset/labels.txt")
-    print("Created dataset")
-    train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=0.5)
+    dataset = FaceRecognitionDataset(dataset_dir="../src/data/celeba_dataset/images/")
+    print("Created dataset, len:", len(dataset))
+    train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=0.1)
     print("Splitted dataset")
     model = SiameseNetwork()
     print("Created model")
@@ -33,13 +33,13 @@ if __name__ == '__main__':
                                                shuffle=False, sampler=None,
                                                collate_fn=None)
     print("Created val_loader")
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     print("Created optimizer")
-    tensorboard_writer = mytensorboard.MySummaryWriter(
+    tensorboard_writer = utils_tensorboard.MySummaryWriter(
         numb_batches=len(train_loader), batch_size=batch_size, experiment_name="SiameseNetwork")
     print("Created tensorboard_writer")
     trainer = SiameseNetworkTrainer(model=model, train_loader=train_loader, valid_loader=val_loader, test_loader=val_loader,
-                                    optimizer=optimizer, tensorboard_writer=tensorboard_writer)
+                                    optimizer=optimizer, tensorboard_writer=tensorboard_writer, device="cuda")
     print("Created trainer")
 
     dataiter = iter(train_loader)
@@ -50,13 +50,13 @@ if __name__ == '__main__':
     negatives = images[2]
 
     # write graph of model to tensorboard
-    tensorboard_writer.add_graph(model, images)
+    #tensorboard_writer.add_graph(model, images)
 
 
     # write sample images to tensorboard
 
 
-    anchors_grid = torchvision.utils.make_grid(anchors, nrow=batch_size)
+    '''    anchors_grid = torchvision.utils.make_grid(anchors, nrow=batch_size)
     tensorboard_writer.add_image("anchor sample", anchors_grid)
 
     positives_grid = torchvision.utils.make_grid(positives, nrow=batch_size)
@@ -69,9 +69,7 @@ if __name__ == '__main__':
     tensorboard_writer.add_image("sample", total_grid)
 
     fig = img_util.plot_classes_preds_face_recognition(anchors, labels, ["1234", "1234", "1234", "1234"])
-    tensorboard_writer.add_figure("predictions vs. actuals", fig)
-
-    time.sleep(13)
+    tensorboard_writer.add_figure("predictions vs. actuals", fig)'''
 
     # Deleting image variables to free RAM
     anchors_grid = None
@@ -82,5 +80,5 @@ if __name__ == '__main__':
 
     print("start training")
 
-    trainer.train(epochs=3)
+    trainer.train(epochs=5)
 

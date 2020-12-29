@@ -9,10 +9,10 @@ import torch
 import torch.nn.functional as f
 
 # Utilities
-from src.utils.mytensorboard import MySummaryWriter
+from src.utils.utils_tensorboard import MySummaryWriter
 from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_default_optimizer
 from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, get_default_loss_function
-#import src.utils.utils_images as img_util
+import src.utils.utils_images as img_util
 
 
 # Template to modify
@@ -31,12 +31,15 @@ class SiameseNetworkTrainer:
             loss_func: typing.Any = None,
             loss_func_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
             device: str = 'cpu',
+            anchor_dict: dict = None
     ):
 
         # Data loader
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.test_loader = test_loader
+
+        self.anchor_dict = anchor_dict
 
         # Model
         self.model = model
@@ -48,7 +51,7 @@ class SiameseNetworkTrainer:
 
         # Get trainable parameters
         params_to_update = []
-        for name, param in self.model.parameters():
+        for param in self.model.parameters():
             if param.requires_grad:
                 params_to_update.append(param)
 
@@ -81,7 +84,6 @@ class SiameseNetworkTrainer:
         # write to tensorboard
         if tensorboard_writer:
             self.tensorboard_writer = tensorboard_writer
-            self.tensorboard_writer.increment_epoch()
 
     def train_epoch(self, epoch) -> None:
         """
@@ -97,6 +99,8 @@ class SiameseNetworkTrainer:
 
         start_time = time.time()
         running_loss = 0
+        total_loss=0
+
         for batch_idx, (images, _) in enumerate(self.train_loader):
             # Get input from data loader
             anchor, positive, negative = images
@@ -121,6 +125,7 @@ class SiameseNetworkTrainer:
 
             # Statistics
             running_loss += triplet_loss.item() * anchor_output.size(0)
+            total_loss += triplet_loss.item() * anchor_output.size(0)
 
             # Logging and tensorboard
             if batch_idx % self.log_frequency == self.log_frequency-1:
@@ -136,6 +141,8 @@ class SiameseNetworkTrainer:
         seconds = round(duration % 60, 0)
         print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s" + 5 * "#")
 
+        return total_loss
+
     def evaluate_epoch(self, epoch):
         """
         Evaluates the current model accuracy in the current epoch/batch.
@@ -146,7 +153,11 @@ class SiameseNetworkTrainer:
         self.model.eval()
 
         correct_prediction = 0
+        total_prediction = 0
         running_loss = 0
+        running_dist_ap = 0
+        running_dist_an = 0
+
         for batch_idx, (images, ids) in enumerate(self.valid_loader):
             # Get input from triplet 'images'
             anchor, positive, negative = images
@@ -179,18 +190,25 @@ class SiameseNetworkTrainer:
 
             # Evaluation and logging
             for idx in range(len(dist_ap)):
-                if self.tensorboard_writer:
-                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", dist_ap[idx], batch_idx)
-                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", dist_an[idx], batch_idx)
+                total_prediction += 1
+                running_dist_an += dist_an[idx]
+                running_dist_ap += dist_an[idx]
                 if dist_ap[idx] < dist_an[idx]:
                     correct_prediction += 1
 
-            # if batch_idx == 0:
-            #     fig = img_util.plot_classes_preds_face_recognition(images[0], ids[0], predictions)
-            #     self.tensorboard_writer.add_figure("predictions vs. actuals", fig, 1)
+            if self.tensorboard_writer and batch_idx % self.log_frequency == self.log_frequency-1:
+                self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap, batch_idx)
+                self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an, batch_idx)
+                running_dist_ap = 0
+                running_dist_an = 0
+
+            if batch_idx==0 and self.tensorboard_writer:#Print the first batch of images with their distances to tensorboard
+                fig = img_util.plot_images_with_distances(images=images,dist_an=dist_an, dist_ap=dist_ap)
+                self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
+
 
         # Compute acc. Logging and tensorboard.
-        valid_acc = (100. * correct_prediction) / len(self.valid_loader)
+        valid_acc = (100. * correct_prediction) / total_prediction
         print(f'Validation accuracy: {valid_acc}')
         if self.tensorboard_writer:
             self.tensorboard_writer.log_validation_accuracy(valid_acc)
@@ -217,26 +235,54 @@ class SiameseNetworkTrainer:
             self.log_frequency = log_frequency
 
         for epoch in range(1, self.epochs+1):
-            self.train_epoch(epoch)
+            epoch_loss = self.train_epoch(epoch)
             if self.tensorboard_writer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
 
-        self.save_training(path_to_saved)
+            if self.tensorboard_writer:
+                batch = iter(self.valid_loader).next()
+                self.inference_to_tensorboard(batch)
 
-    def save_training(self, path_to_saved: str = None):
+            if epoch_loss<10:
+                print(f"##### Interrupt training because training loss is {epoch_loss} and very good")
+                break
+
+        if path_to_saved:
+            self.save_training(path_to_saved)
+
+    def inference_to_tensorboard(self, batch, fuzzy_matches: bool = True):
+        """
+        Logs the positives of one batch to tensorboard with the prediction and the inference
+        :param batch: the batch incl anchors, positives, negatives and the ids
+        :param fuzzy_matches:
+        :return:
+        """
+        (images, ids) = batch
+
+        if self.tensorboard_writer:  # log inference on some pics
+            self.model.create_anchor_embeddings(anchor_dict=self.anchor_dict)
+
+            positives = images[1]
+            predicted_ids = []
+            for idx in range(len(ids)):
+                true_id = ids[idx]
+                image = positives[idx]
+                if self.device == "cuda":
+                    image = image.cuda()
+                (predicted_id, comment) = self.model.inference(image, fuzzy_matches=fuzzy_matches, use_threshold=False)
+                predicted_ids.append(predicted_id)
+            fig = img_util.plot_classes_preds_face_recognition(positives, ids, predicted_ids, fuzzy_matches)
+            self.tensorboard_writer.add_figure("inference", fig, 0)
+
+    def save_training(self, path_to_saved: str = "./src/saved/trained_models/"):
         """
 
         :param path_to_saved:
         :return:
         """
 
-        # Default path
-        path = "./src/saved/trained_models/"
-
-        # Update path if input is given
-        if path == path_to_saved:
-            path = path_to_saved
+        path = path_to_saved
 
         # Validate path to directory 'trained_models'
         if not os.path.exists(path):
@@ -249,13 +295,15 @@ class SiameseNetworkTrainer:
 
         # Validate path to current training directory
         if not os.path.exists(trainings_dir_path):
-            os.makedirs(path)
+            os.makedirs(trainings_dir_path)
 
         # Save model
         torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
 
         # Save hyperparameter
         hyperparameter = {
+                'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
+                'git_commit_id': "70b70a7", #ToDo: manually edit,
                 'optimizer': self.optimizer,
                 'loss_func': self.loss_func,
                 'epochs': self.epochs,

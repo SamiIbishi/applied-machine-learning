@@ -14,7 +14,7 @@ from zipfile import ZipFile
 class DatasetDownloader:
     # Downloader Class to handle the dataset download and unzipping it
 
-    def __init__(self, url: str, filename: str, dataset_dir: str = "../data/new_dataset/",
+    def __init__(self, url: str, filename: str, dataset_dir: str = "./data/new_dataset/",
                  unzip: bool = False, preprocess: bool = False, number_of_positives: int = 2):
         """
         Downloads a remote data set and stores it in target directory.
@@ -97,6 +97,7 @@ class DatasetDownloader:
                     os.remove(join(self.dataset_folder, image))
 
 
+
 def download_dataset(local: bool = True):
     """
     :param local: on a local machine only use subset of the data. on a server uses full dataset
@@ -136,7 +137,3 @@ def download_dataset(local: bool = True):
                               filename="images.zip", unzip=True, preprocess=True,
                               number_of_positives=10)
 
-
-# download_dataset(local = True)
-
-download_dataset(local=False)

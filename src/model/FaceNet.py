@@ -28,7 +28,8 @@ class SiameseNetwork(nn.Module):
             input_size: int = 224,
             num_embedding_dimensions: int = 32,
             num_features: int = 1024,
-            pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet
+            pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
+            device: str = 'cpu'
     ):
         super(SiameseNetwork, self).__init__()
 
@@ -45,6 +46,8 @@ class SiameseNetwork(nn.Module):
             nn.Linear(1024, num_embedding_dimensions),
         )
 
+        self.device = device
+
     def forward_single(self, x):
         """
         Propagation of one input image.
@@ -52,6 +55,9 @@ class SiameseNetwork(nn.Module):
         :param x: Images tensor.
         :return: Embedding of input images.
         """
+        if self.device == "cuda" and torch.cuda.is_available() :
+            x = x.cuda()
+
         # Image Embedding
         x = self.feature_extractor(x)
         x = x.view(-1, num_flat_features(x))
@@ -82,7 +88,7 @@ class SiameseNetwork(nn.Module):
         the distance to all anchor embeddings. The smallest distance indicates the identity. Additionally a threshold
         can be used to make sure that unknown people are not wrongly identified as a known person (from the database).
 
-        :param input_image: Image of person tp be verified/recognized.
+        :param input_image: Image of person to be verified/recognized.
         :param use_threshold: Inference ID with dist < threshold, else smallest dist.
         :param threshold: If use_threshold=True, threshold determines all possible matches.
         :param fuzzy_matches: When fuzzy_matches=False.
@@ -90,10 +96,10 @@ class SiameseNetwork(nn.Module):
         """
 
         # Switch to evaluate mode
-        self.model.eval()
+        self.eval()
 
         # Compute image embeddings
-        input_image = transforms.ToTensor()(input_image)
+        input_image = input_image.unsqueeze(0)
         emb_input = self.forward_single(input_image)
 
         # Get match(es)
@@ -114,12 +120,19 @@ class SiameseNetwork(nn.Module):
                         smallest_distance = dist
                         matched_ids = person_id                 # id with the smallest dist and smaller than threshold
         else:
-            smallest_distance = float("inf")
-            for person_id, emb_anchor in self.anchor_embeddings.items():
-                dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                if dist < smallest_distance:
-                    smallest_distance = dist
-                    matched_ids = person_id                     # id with with the smallest distance
+            if fuzzy_matches:
+                matched_ids = list()
+                for person_id, emb_anchor in self.anchor_embeddings.items():
+                    dist = f.pairwise_distance(emb_anchor, emb_input).item()
+                    matched_ids.append((person_id, round(dist, 2)))   # all ids with dists smaller than threshold
+                matched_ids.sort(key=lambda x: x[1])
+            else:
+                smallest_distance = float("inf")
+                for person_id, emb_anchor in self.anchor_embeddings.items():
+                    dist = f.pairwise_distance(emb_anchor, emb_input).item()
+                    if dist < smallest_distance:
+                        smallest_distance = dist
+                        matched_ids = person_id                     # id with with the smallest distance
 
         if matched_ids is None:
             return "-1", "Unknown person. No identity match found!"
@@ -140,7 +153,7 @@ class SiameseNetwork(nn.Module):
         """
         for person_id, anchor_path in anchor_dict.items():
             anchor_image = Image.open(anchor_path).resize([self.input_size, self.input_size])
-            anchor_image = transforms.ToTensor()(anchor_image)
+            anchor_image = transforms.ToTensor()(anchor_image).unsqueeze(0)
             self.anchor_embeddings[person_id] = self.forward_single(anchor_image)
 
         if embedding_path:

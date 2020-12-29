@@ -38,12 +38,13 @@ class MySummaryWriter(SummaryWriter):
 
     def __init__(self,
                  numb_batches: int,
-                 base_logdir: str = os.path.join(".", "logs"),
+                 base_logdir: str = os.path.join("..", "saved", "logs"),
                  experiment_name: str = "FaceRecogniction",
                  run_name: str = "run_1",
                  epoch: int = 0,
                  batch_size: int = 8,
-                 overwrite_logs: bool = False
+                 overwrite_logs: bool = False,
+                 start_tensorboard: bool = False
                  ):
         self.epoch = epoch
         self.numb_batches = numb_batches
@@ -54,7 +55,9 @@ class MySummaryWriter(SummaryWriter):
         print("logpath: ", self.logpath)
         self.batch_size = batch_size
         self.writer = SummaryWriter(self.logpath)
-        self.start_tensorboard()
+
+        if start_tensorboard:
+            self.start_tensorboard()
 
     def get_empty_logpath(self, overwrite_logs: bool):
         """

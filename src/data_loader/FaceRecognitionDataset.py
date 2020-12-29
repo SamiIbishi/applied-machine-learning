@@ -97,6 +97,16 @@ class FaceRecognitionDataset(Dataset):
 
         return person_dict
 
+    def get_personid_anchor_dict(self, person_dict: dict):
+        person_id_anchor_dict = {}
+
+        for person in person_dict.values():
+            id = person[0]
+            anchor_patch = person[1][2]
+            person_id_anchor_dict[id] = anchor_patch
+
+        return person_id_anchor_dict
+
     def _create_triplets(self) -> list:
         # This is the list of all images we sample from for negatives
         all_images = []
@@ -151,14 +161,3 @@ class FaceRecognitionDataset(Dataset):
         return triplet_images, triplet[0][0]
 
 
-dataset = FaceRecognitionDataset(dataset_dir='../data/celeba_dataset/images')
-print(dataset.get_anchor_dict())
-"""
-images, label = dataset[100]
-
-for image in images:
-    imshow(image.permute(1, 2, 0))
-    show()
-print(label)
-print("length =", len(dataset))
-"""
