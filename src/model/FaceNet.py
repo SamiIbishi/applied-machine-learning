@@ -27,7 +27,7 @@ class SiameseNetwork(nn.Module):
             self,
             input_size: int = 224,
             num_embedding_dimensions: int = 32,
-            num_features: int = 1024,
+            num_features: int = 2048,
             pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
             device: str = 'cpu'
     ):
@@ -41,9 +41,14 @@ class SiameseNetwork(nn.Module):
             num_output_features=self.num_features
         )
         self.image_embedding = nn.Sequential(
+            nn.Linear(self.num_features, 2048),
+            nn.BatchNorm1d(num_features=2048),
+            nn.PReLU(num_parameters=1, init=0.3),
             nn.Linear(self.num_features, 1024),
+            nn.BatchNorm1d(num_features=1024),
             nn.PReLU(num_parameters=1, init=0.3),
             nn.Linear(1024, num_embedding_dimensions),
+            nn.Sigmoid()
         )
 
         self.device = device
