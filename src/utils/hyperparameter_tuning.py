@@ -48,7 +48,7 @@ datasetlength = 100
 
 log_frequency = int(datasetlength / logs_per_epoch)
 
-experiment_name = "Test"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_5"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
