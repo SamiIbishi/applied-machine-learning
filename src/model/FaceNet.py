@@ -26,7 +26,7 @@ class SiameseNetwork(nn.Module):
     def __init__(
             self,
             input_size: int = 224,
-            num_embedding_dimensions: int = 32,
+            num_embedding_dimensions: int = 256,
             num_features: int = 2048,
             pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
             device: str = 'cpu'
