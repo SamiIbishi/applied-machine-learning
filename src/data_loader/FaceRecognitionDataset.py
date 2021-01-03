@@ -129,7 +129,7 @@ class FaceRecognitionDataset(Dataset):
         person_dict = dict()
         for index, image_subfolder in enumerate(self.image_filepaths):
             if index%10 == 0:
-                print(f"Image filepath {index} of {len(self.image_filepaths)}")
+                print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])
 
