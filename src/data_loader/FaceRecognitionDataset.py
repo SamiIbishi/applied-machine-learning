@@ -15,6 +15,7 @@ from torch import unsqueeze
 from torch import stack
 from torchvision import transforms
 import torchvision.models as models
+import torch
 
 # Matplotlib package
 from matplotlib.pyplot import imshow
@@ -114,6 +115,10 @@ class FaceRecognitionDataset(Dataset):
         # Loads image and resizes to 224x224
         image = self.load_preprocessed_image(filepath)
 
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
+            image = image.cuda()
+
         dummy_batch = unsqueeze(image, 0)
         embedding = self.model(dummy_batch)
 
@@ -123,6 +128,8 @@ class FaceRecognitionDataset(Dataset):
         """ Create a dict of person ID, anchor (first index) and positives """
         person_dict = dict()
         for index, image_subfolder in enumerate(self.image_filepaths):
+            if index%10 == 0:
+                print(f"Image filepath {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])
 
@@ -152,14 +159,14 @@ class FaceRecognitionDataset(Dataset):
 
         return person_dict
 
-    def get_personid_anchor_dict(self, person_dict: dict):
+    def get_personid_anchor_dict(self):
 
         person_id_anchor_dict = {}
 
         # person dict is now of shape [anchor, [positive, positive,...]] , thus:
-        for person in person_dict.items():
-            person_id = person[0][0]
-            anchor_path = person[0][2]
+        for person in self.person_dict.items():
+            person_id = person[0]
+            anchor_path = person[1][0][2]
             person_id_anchor_dict[person_id] = anchor_path
 
         return person_id_anchor_dict
