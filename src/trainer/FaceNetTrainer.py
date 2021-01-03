@@ -24,7 +24,8 @@ class SiameseNetworkTrainer:
             valid_loader,
             test_loader=None,
             epochs: int = 10,
-            log_frequency: int = 10,
+            logs_per_epoch: int = 10,
+            image_log_frequency: int = 5,
             tensorboard_writer: MySummaryWriter = None,
             optimizer: typing.Any = None,
             optimizer_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
@@ -57,7 +58,10 @@ class SiameseNetworkTrainer:
 
         # Hyperparameter - Epoch & log-frequency
         self.epochs = epochs
-        self.log_frequency = log_frequency
+        self.log_frequency = int(len(train_loader)/logs_per_epoch)
+        if self.log_frequency <= 0:
+            self.log_frequency=1
+        self.image_log_frequency = image_log_frequency
 
         # Hyperparameter - Optimizer
         self.optimizer_args = optimizer_args
@@ -128,18 +132,18 @@ class SiameseNetworkTrainer:
             total_loss += triplet_loss.item() * anchor_output.size(0)
 
             # Logging and tensorboard
-            if batch_idx % self.log_frequency == self.log_frequency-1:
+            if batch_idx % self.log_frequency == self.log_frequency-1 or batch_idx == len(self.train_loader)-1:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
-                epoch_loss = running_loss / len(self.train_loader)
-                print(f"{header} => running trainings loss: {epoch_loss}")
+                epoch_loss = (running_loss / anchor.size(0))/self.log_frequency
+                print(f"{header} => running trainings loss: {epoch_loss:.2f}")
                 if self.tensorboard_writer:
-                    self.tensorboard_writer.log_training_loss(running_loss/self.log_frequency, batch_idx)
+                    self.tensorboard_writer.log_training_loss(epoch_loss, batch_idx)
                 running_loss = 0
 
         duration = time.time() - start_time
         minutes = round(duration // 60, 0)
         seconds = round(duration % 60, 0)
-        print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s" + 5 * "#")
+        print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s " + 5 * "#")
 
         return total_loss
 
@@ -176,11 +180,6 @@ class SiameseNetworkTrainer:
             # Statistics
             running_loss += triplet_loss.item() * emb_anchor.size(0)
 
-            # Logging and tensorboard
-            if batch_idx % self.log_frequency == self.log_frequency - 1:
-                header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.valid_loader)}]"
-                epoch_loss = running_loss / len(self.valid_loader)
-                print(f"{header} => running validation loss: {epoch_loss}")
 
             # Distance between Anchor and Positive
             dist_ap = f.pairwise_distance(emb_anchor, emb_positive, p=2)
@@ -196,20 +195,37 @@ class SiameseNetworkTrainer:
                 if dist_ap[idx] < dist_an[idx]:
                     correct_prediction += 1
 
-            if self.tensorboard_writer and batch_idx % self.log_frequency == self.log_frequency-1:
-                self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap, batch_idx)
-                self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an, batch_idx)
+            # Logging and tensorboard
+            if batch_idx % self.log_frequency == self.log_frequency - 1 or batch_idx == len(
+                    self.valid_loader):
+                header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.valid_loader)}]"
+
+                # averaging
+                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx+1)
+                running_dist_an = running_dist_an / ((batch_idx%self.log_frequency+1)*anchor.size(0))
+                running_dist_ap = running_dist_ap / ((batch_idx % self.log_frequency+1)*anchor.size(0))
+
+                print(f"{header} => running validation loss: {epoch_loss:.2f}")
+
+                if self.tensorboard_writer:
+                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap, batch_idx)
+                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an, batch_idx)
+
                 running_dist_ap = 0
                 running_dist_an = 0
 
-            if batch_idx==0 and self.tensorboard_writer:#Print the first batch of images with their distances to tensorboard
+            if batch_idx==0 \
+                    and (epoch%self.image_log_frequency == self.image_log_frequency -1 \
+                        or epoch == self.epochs) \
+                    and self.tensorboard_writer:#Print the first batch of images with their distances to tensorboard
+                print(f"logging image in epoch {epoch}")
                 fig = img_util.plot_images_with_distances(images=images,dist_an=dist_an, dist_ap=dist_ap)
                 self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
 
 
         # Compute acc. Logging and tensorboard.
         valid_acc = (100. * correct_prediction) / total_prediction
-        print(f'Validation accuracy: {valid_acc}')
+        print(f'Validation accuracy: {valid_acc:.2f}%')
         if self.tensorboard_writer:
             self.tensorboard_writer.log_validation_accuracy(valid_acc)
         # TODO: Print some example pics to tensorboard with distances
