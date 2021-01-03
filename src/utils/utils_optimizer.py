@@ -19,12 +19,14 @@ def get_default_optimizer(model_params):
     Creates an Adam optimizer object with predefined default settings.
 
     :param model_params: Model parameter.
-    :return: Returns default optimizer - Adam - object with default parameter (learning_rate=1e-3, weight_decay=5e-5).
+    :return: Returns default optimizer - Adam -
+    object with default parameter (learning_rate=1e-3, weight_decay=5e-5).
     """
     return optim.Adam(model_params, lr=1e-3, weight_decay=5e-2)
 
 
-def get_optimizer(optimizer: typing.Union[str, 'CustomOptimizer'], optimizer_params, optimizer_args):
+def get_optimizer(optimizer: typing.Union[str, 'CustomOptimizer'], optimizer_params,
+                  optimizer_args):
     """
     Creates a custom optimizer with custom optimizer arguments.
 

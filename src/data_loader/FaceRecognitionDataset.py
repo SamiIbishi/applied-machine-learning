@@ -128,7 +128,7 @@ class FaceRecognitionDataset(Dataset):
         """ Create a dict of person ID, anchor (first index) and positives """
         person_dict = dict()
         for index, image_subfolder in enumerate(self.image_filepaths):
-            if index%10 == 0:
+            if index % 10 == 0:
                 print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])

@@ -21,8 +21,6 @@ DatasetDownloader(dataset_dir="../data/celeba_dataset",
                    url='https://drive.google.com/uc?id=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
                    filename="labels.txt", unzip=False)'''
 
-
-
 torch.backends.cudnn.deterministic = True
 
 torch.manual_seed(999)
@@ -30,25 +28,27 @@ torch.manual_seed(999)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(999)
 
-
 # Configurations
-batch_size=256 #16
+batch_size = 256  # 16
 epochs = 200
 use_full_dataset = False
-val_ratio=0.1
+val_ratio = 0.1
 
-learning_rates =  [0.001]#[0.001, 0.01, 0.0001]
-optimizers = [(CustomOptimizer.ADAM, "Adam"), (CustomOptimizer.Adagrad, "Adagrad"), (CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD")]
-pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")] #[(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"), (PretrainedModels.VGG19, "VGG19")]
+learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
+optimizers = [(CustomOptimizer.ADAM, "Adam"), (CustomOptimizer.Adagrad, "Adagrad"),
+              (CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD")]
+pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")]
+# [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"),
+# (PretrainedModels.VGG19, "VGG19")]
 
 logs_per_epoch = 10
 image_logs_frequency = 5
 
 datasetlength = 100
 
-log_frequency = int(datasetlength/logs_per_epoch)
+log_frequency = int(datasetlength / logs_per_epoch)
 
-experiment_name = "Test" #"FaceNet_TripletNetwork_4"
+experiment_name = "Test"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
@@ -59,6 +59,7 @@ default_optimizer_params = {
     "weight_decay": 0.05,
 }
 
+print("Creating dataset...")
 if use_full_dataset:
     dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset/images/")
 else:
@@ -84,7 +85,6 @@ print("Created data loaders")
 
 id_anchor_dict = dataset.get_personid_anchor_dict()
 
-
 for pretrained_model, model_name in pretrained_models:
     for lr in learning_rates:
         default_optimizer_params["learning_rate"] = lr
@@ -93,15 +93,20 @@ for pretrained_model, model_name in pretrained_models:
 
             print(f"################# Training {model_name}, {lr} for {epochs} epochs")
             # init tensorboardwriter
-            tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader), experiment_name=experiment_name, run_name=model_name + "_" + optimizer_name + "_" +  str(lr), batch_size=batch_size)
+            tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader),
+                                                 experiment_name=experiment_name,
+                                                 run_name=model_name + "_" + optimizer_name +
+                                                          "_" + str(lr), batch_size=batch_size)
 
             # init model and trainer
             model = SiameseNetwork(pretrained_model=pretrained_model, device=device)
-            optimizer = get_optimizer(optimizer=optimizer_type, optimizer_params=model.parameters(), optimizer_args=default_optimizer_params)
+            optimizer = get_optimizer(optimizer=optimizer_type,
+                                      optimizer_params=model.parameters(),
+                                      optimizer_args=default_optimizer_params)
 
             # Log Model to tensorboard
             images, ids = iter(train_loader).next()
-            if device=="cuda" and torch.cuda.is_available():
+            if device == "cuda" and torch.cuda.is_available():
                 images = [images[0].cuda(), images[1].cuda(), images[2].cuda()]
                 model = model.cuda()
             tensorboard_writer.add_graph(model, images)
@@ -110,7 +115,7 @@ for pretrained_model, model_name in pretrained_models:
 
             trainer = FaceNetTrainer.SiameseNetworkTrainer(
                 model=model,
-                train_loader = train_loader,
+                train_loader=train_loader,
                 valid_loader=val_loader,
                 optimizer=optimizer,
                 tensorboard_writer=tensorboard_writer,
@@ -120,20 +125,5 @@ for pretrained_model, model_name in pretrained_models:
                 anchor_dict=id_anchor_dict
             )
 
-
             save_path = os.path.join("..", "saved", "models")
             trainer.train(epochs=epochs, path_to_saved=save_path)
-
-
-'''
-    # ToDo: 
-    #Check Pipeline [DatenLaden, Training, Eval, Abspeichern(Model, Embeddings, Hyperparam-files), wieder laden, Inference,...]
-    #Early stopping if loss(epoch)=0
-    #Tensorboard logging
-    #Clean machen
-    
-    Hyperparameters (Epochs, je 15)
-    * BatchSize (8,16) Erstmal nur 16
-    * Regularization [None, L1, L2, L1+L2] #Prio2
-    * Für später: threshold
-'''

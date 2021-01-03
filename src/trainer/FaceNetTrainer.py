@@ -11,7 +11,8 @@ import torch.nn.functional as f
 # Utilities
 from src.utils.utils_tensorboard import MySummaryWriter
 from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_default_optimizer
-from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, get_default_loss_function
+from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, \
+    get_default_loss_function
 import src.utils.utils_images as img_util
 
 
@@ -28,9 +29,9 @@ class SiameseNetworkTrainer:
             image_log_frequency: int = 5,
             tensorboard_writer: MySummaryWriter = None,
             optimizer: typing.Any = None,
-            optimizer_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
+            optimizer_args: typing.Optional[typing.Dict[str, typing.Any]]=None,
             loss_func: typing.Any = None,
-            loss_func_args: typing.Optional[typing.Dict[str, typing.Any]] = None,
+            loss_func_args: typing.Optional[typing.Dict[str, typing.Any]]=None,
             device: str = 'cpu',
             anchor_dict: dict = None
     ):
@@ -58,9 +59,9 @@ class SiameseNetworkTrainer:
 
         # Hyperparameter - Epoch & log-frequency
         self.epochs = epochs
-        self.log_frequency = int(len(train_loader)/logs_per_epoch)
+        self.log_frequency = int(len(train_loader) / logs_per_epoch)
         if self.log_frequency <= 0:
-            self.log_frequency=1
+            self.log_frequency = 1
         self.image_log_frequency = image_log_frequency
 
         # Hyperparameter - Optimizer
@@ -72,7 +73,7 @@ class SiameseNetworkTrainer:
         elif optimizer:
             self.optimizer = optimizer
         else:
-            self.optimizer = get_default_optimizer(params_to_update)     # default optimizer
+            self.optimizer = get_default_optimizer(params_to_update)  # default optimizer
 
         # Hyperparameter - Loss Function
         self.loss_func_args = loss_func_args
@@ -83,7 +84,7 @@ class SiameseNetworkTrainer:
         elif loss_func:
             self.loss_func = loss_func
         else:
-            self.loss_func = get_default_loss_function()   # default loss function
+            self.loss_func = get_default_loss_function()  # default loss function
 
         # write to tensorboard
         if tensorboard_writer:
@@ -103,7 +104,7 @@ class SiameseNetworkTrainer:
 
         start_time = time.time()
         running_loss = 0
-        total_loss=0
+        total_loss = 0
 
         for batch_idx, (images, _) in enumerate(self.train_loader):
             # Get input from data loader
@@ -118,7 +119,9 @@ class SiameseNetworkTrainer:
                 self.optimizer.zero_grad()
 
                 # Extract image embedding via model output
-                anchor_output, positive_output, negative_output = self.model.forward(anchor, positive, negative)
+                anchor_output, positive_output, negative_output = self.model.forward(anchor,
+                                                                                     positive,
+                                                                                     negative)
 
                 # Calculate loss
                 triplet_loss = self.loss_func(anchor_output, positive_output, negative_output)
@@ -132,9 +135,10 @@ class SiameseNetworkTrainer:
             total_loss += triplet_loss.item() * anchor_output.size(0)
 
             # Logging and tensorboard
-            if batch_idx % self.log_frequency == self.log_frequency-1 or batch_idx == len(self.train_loader)-1:
+            if batch_idx % self.log_frequency == self.log_frequency - 1 or batch_idx == len(
+                    self.train_loader) - 1:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
-                epoch_loss = (running_loss / anchor.size(0))/self.log_frequency
+                epoch_loss = (running_loss / anchor.size(0)) / self.log_frequency
                 print(f"{header} => running trainings loss: {epoch_loss:.2f}")
                 if self.tensorboard_writer:
                     self.tensorboard_writer.log_training_loss(epoch_loss, batch_idx)
@@ -143,7 +147,8 @@ class SiameseNetworkTrainer:
         duration = time.time() - start_time
         minutes = round(duration // 60, 0)
         seconds = round(duration % 60, 0)
-        print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: {minutes}m {seconds}s " + 5 * "#")
+        print(5 * "#" + f" EPOCH {epoch:02d} DONE - computation time: "
+                        f"{minutes}m {seconds}s " + 5 * "#")
 
         return total_loss
 
@@ -172,14 +177,14 @@ class SiameseNetworkTrainer:
 
             # Compute image embeddings
             with torch.set_grad_enabled(False):
-                emb_anchor, emb_positive, emb_negative = self.model.forward(anchor, positive, negative)
+                emb_anchor, emb_positive, emb_negative = self.model.forward(anchor, positive,
+                                                                            negative)
 
                 # Calculate loss
                 triplet_loss = self.loss_func(emb_anchor, emb_positive, emb_negative)
 
             # Statistics
             running_loss += triplet_loss.item() * emb_anchor.size(0)
-
 
             # Distance between Anchor and Positive
             dist_ap = f.pairwise_distance(emb_anchor, emb_positive, p=2)
@@ -201,34 +206,38 @@ class SiameseNetworkTrainer:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.valid_loader)}]"
 
                 # averaging
-                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx+1)
-                running_dist_an = running_dist_an / ((batch_idx%self.log_frequency+1)*anchor.size(0))
-                running_dist_ap = running_dist_ap / ((batch_idx % self.log_frequency+1)*anchor.size(0))
+                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx + 1)
+                running_dist_an = running_dist_an / (
+                            (batch_idx % self.log_frequency + 1) * anchor.size(0))
+                running_dist_ap = running_dist_ap / (
+                            (batch_idx % self.log_frequency + 1) * anchor.size(0))
 
                 print(f"{header} => running validation loss: {epoch_loss:.2f}")
 
                 if self.tensorboard_writer:
-                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap, batch_idx)
-                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an, batch_idx)
+                    self.tensorboard_writer.log_custom_scalar("dist_ap/eval", running_dist_ap,
+                                                              batch_idx)
+                    self.tensorboard_writer.log_custom_scalar("dist_an/eval", running_dist_an,
+                                                              batch_idx)
 
                 running_dist_ap = 0
                 running_dist_an = 0
 
-            if batch_idx==0 \
-                    and (epoch%self.image_log_frequency == self.image_log_frequency -1 \
-                        or epoch == self.epochs) \
-                    and self.tensorboard_writer:#Print the first batch of images with their distances to tensorboard
-                print(f"logging image in epoch {epoch}")
-                fig = img_util.plot_images_with_distances(images=images,dist_an=dist_an, dist_ap=dist_ap)
-                self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs)  \
+                    and batch_idx == 0\
+                    and self.tensorboard_writer:
+                # Print the first batch of images with their distances to tensorboard
 
+                print(f"logging image in epoch {epoch}")
+                fig = img_util.plot_images_with_distances(images=images, dist_an=dist_an,
+                                                          dist_ap=dist_ap)
+                self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
 
         # Compute acc. Logging and tensorboard.
         valid_acc = (100. * correct_prediction) / total_prediction
         print(f'Validation accuracy: {valid_acc:.2f}%')
         if self.tensorboard_writer:
             self.tensorboard_writer.log_validation_accuracy(valid_acc)
-        # TODO: Print some example pics to tensorboard with distances
         return valid_acc
 
     def train(self,
@@ -250,7 +259,7 @@ class SiameseNetworkTrainer:
         if log_frequency:
             self.log_frequency = log_frequency
 
-        for epoch in range(1, self.epochs+1):
+        for epoch in range(1, self.epochs + 1):
             epoch_loss = self.train_epoch(epoch)
             if self.tensorboard_writer:
                 self.tensorboard_writer.increment_epoch()
@@ -260,8 +269,9 @@ class SiameseNetworkTrainer:
                 batch = iter(self.valid_loader).next()
                 self.inference_to_tensorboard(batch)
 
-            if epoch_loss<10:
-                print(f"##### Interrupt training because training loss is {epoch_loss} and very good")
+            if epoch_loss < 10:
+                print(
+                    f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
 
         if path_to_saved:
@@ -286,9 +296,11 @@ class SiameseNetworkTrainer:
                 image = positives[idx]
                 if self.device == "cuda":
                     image = image.cuda()
-                (predicted_id, comment) = self.model.inference(image, fuzzy_matches=fuzzy_matches, use_threshold=False)
+                (predicted_id, comment) = self.model.inference(image, fuzzy_matches=fuzzy_matches,
+                                                               use_threshold=False)
                 predicted_ids.append(predicted_id)
-            fig = img_util.plot_classes_preds_face_recognition(positives, ids, predicted_ids, fuzzy_matches)
+            fig = img_util.plot_classes_preds_face_recognition(positives, ids, predicted_ids,
+                                                               fuzzy_matches)
             self.tensorboard_writer.add_figure("inference", fig, 0)
 
     def save_training(self, path_to_saved: str = "./src/saved/trained_models/"):
@@ -318,11 +330,11 @@ class SiameseNetworkTrainer:
 
         # Save hyperparameter
         hyperparameter = {
-                'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
-                'git_commit_id': "70b70a7", #ToDo: manually edit,
-                'optimizer': self.optimizer,
-                'loss_func': self.loss_func,
-                'epochs': self.epochs,
+            'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
+            'git_commit_id': "70b70a7",  # ToDo: manually edit,
+            'optimizer': self.optimizer,
+            'loss_func': self.loss_func,
+            'epochs': self.epochs,
         }
 
         if self.optimizer_args:

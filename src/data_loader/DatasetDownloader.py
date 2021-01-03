@@ -97,7 +97,6 @@ class DatasetDownloader:
                     os.remove(join(self.dataset_folder, image))
 
 
-
 def download_dataset(local: bool = True):
     """
     :param local: on a local machine only use subset of the data. on a server uses full dataset
@@ -136,4 +135,3 @@ def download_dataset(local: bool = True):
                                   '=1Uqqt7EDq1gQp6hfOixVG8vZUtBVBMwVg',
                               filename="images.zip", unzip=True, preprocess=True,
                               number_of_positives=10)
-

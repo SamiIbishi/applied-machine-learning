@@ -3,7 +3,7 @@ import enum
 import typing
 
 # Torch Packages
-from torch .nn import TripletMarginLoss
+from torch.nn import TripletMarginLoss
 
 
 # ENUMS as an auxiliary support to avoid spelling issues
@@ -15,7 +15,8 @@ def get_default_loss_function():
     """
     Creates a loss function object with predefined default settings.
 
-    :return: Returns loss_func - TripletMarginLoss - object with default parameters (margin=10.0, p=2, reduction='sum').
+    :return: Returns loss_func - TripletMarginLoss -
+    object with default parameters (margin=10.0, p=2, reduction='sum').
     """
     return TripletMarginLoss(margin=10.0, p=2, reduction='sum')
 
