@@ -50,6 +50,9 @@ def plot_classes_preds(net, images, labels, classes):
     # plot the images in the batch, along with predicted and true labels
     fig = plt.figure(figsize=(12, 6))
     n = len(images)
+    if len(images)>16:
+        n = 16
+
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
         matplotlib_imshow(images[idx], one_channel=True)
@@ -63,6 +66,8 @@ def plot_classes_preds(net, images, labels, classes):
 
 def plot_images_with_distances(images, dist_an, dist_ap):
     batch_size = len(images[0])
+    if len(images[0])>16:
+        batch_size = 16
 
     fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3*batch_size))
     for idx, row in enumerate(ax_arr):
