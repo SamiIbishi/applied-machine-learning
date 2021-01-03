@@ -1,4 +1,5 @@
 # General Packages
+import json
 import os
 import time
 import typing
@@ -138,7 +139,7 @@ class SiameseNetworkTrainer:
             if batch_idx % self.log_frequency == self.log_frequency - 1 or batch_idx == len(
                     self.train_loader) - 1:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
-                epoch_loss = (running_loss / anchor.size(0)) / self.log_frequency
+                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx % self.log_frequency +1)
                 print(f"{header} => running trainings loss: {epoch_loss:.2f}")
                 if self.tensorboard_writer:
                     self.tensorboard_writer.log_training_loss(epoch_loss, batch_idx)
@@ -228,7 +229,6 @@ class SiameseNetworkTrainer:
                     and self.tensorboard_writer:
                 # Print the first batch of images with their distances to tensorboard
 
-                print(f"logging image in epoch {epoch}")
                 fig = img_util.plot_images_with_distances(images=images, dist_an=dist_an,
                                                           dist_ap=dist_ap)
                 self.tensorboard_writer.add_figure("eval/distances", fig, batch_idx)
@@ -273,6 +273,7 @@ class SiameseNetworkTrainer:
                 print(
                     f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
+
 
         if path_to_saved:
             self.save_training(path_to_saved)
@@ -330,11 +331,11 @@ class SiameseNetworkTrainer:
 
         # Save hyperparameter
         hyperparameter = {
-            'date': date.strftime("%m/%d/%Y, %H:%M:%S"),
-            'git_commit_id': "70b70a7",  # ToDo: manually edit,
-            'optimizer': self.optimizer,
-            'loss_func': self.loss_func,
-            'epochs': self.epochs,
+            "date": date.strftime("%m/%d/%Y, %H:%M:%S"),
+            "git_commit_id": "70b70a7",  # ToDo: manually edit,
+            "optimizer": str(self.optimizer),
+            "loss_func": str(self.loss_func),
+            "epochs": self.epochs,
         }
 
         if self.optimizer_args:
@@ -345,4 +346,6 @@ class SiameseNetworkTrainer:
             for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
-        torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter'))
+      # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
+        with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
+            json.dump(hyperparameter, write_file)
