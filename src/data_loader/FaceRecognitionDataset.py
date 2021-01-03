@@ -5,11 +5,17 @@ import typing
 from os.path import join
 import numpy as np
 from typing import List, Any, Union
+import operator
 
 # Torch Packages
 from torch.utils.data import Dataset
 from torch import Tensor
+from torch import nn
+from torch import unsqueeze
+from torch import stack
 from torchvision import transforms
+import torchvision.models as models
+import torch
 
 # Matplotlib package
 from matplotlib.pyplot import imshow
@@ -47,13 +53,26 @@ class FaceRecognitionDataset(Dataset):
         self.image_width = image_width
         self.image_height = image_height
 
+        # The model used for image to vec
+        self.model = models.densenet161(pretrained=True)
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # Remove last fully-connected layer
+        new_classifier = nn.Sequential(*list(self.model.classifier.children())[:-2])
+        self.model.classifier = new_classifier
+        self.model.eval()
+
+        # L2 loss- function (mean squared error)
+        self.loss = nn.MSELoss()
+
+        # Method to transform image to tensor
+        self.to_tensor = transforms.ToTensor()
+
         # Get all the subfolders of the different persons
         self.image_filepaths = [f.path for f in os.scandir(self.dataset_folder) if f.is_dir()]
 
         self.person_dict = self._create_person_dict()
-
-        # Method to tranform image to tensor
-        self.to_tensor = transforms.ToTensor()
 
         # Get the triplets of original, similar, random
         self.triplets = self._create_triplets()
@@ -63,14 +82,54 @@ class FaceRecognitionDataset(Dataset):
 
         return self.anchor_dict
 
-    # TODO: advanced anchor creation
-    def _choose_anchorimage(self):
-        pass
+    def _choose_anchor_image(self, image_information_list: list) -> int:
+        """
+        Given a list of images with their embeddings calculate which image to choose as anchor and
+        return its index
+        :param image_information_list: Image list created in _create_person_dict() within one
+                subdirectory
+        :return: the index of the anchor image within the list
+        """
+        embedding_list = []
+        loss_list = []
+        for image_information in image_information_list:
+            embedding_list.append(image_information[3])
+
+        torch_embedding_list = stack(embedding_list)
+
+        mean_emb = sum(torch_embedding_list) / len(torch_embedding_list)
+        for embedding in torch_embedding_list:
+            loss_list.append(self.loss(embedding, mean_emb))
+
+        # Get the image with the smallest difference to the average embedding
+        min_val, idx = min((min_val, idx) for (idx, min_val) in enumerate(loss_list))
+
+        return idx
+
+    def _calculate_embedding(self, filepath: str) -> Tensor:
+        """
+        Loads an image and calculates its embedding
+        :param filepath: The filepath to the image to be embedded
+        :return: The 4096 dimensional image embedding
+        """
+        # Loads image and resizes to 224x224
+        image = self.load_preprocessed_image(filepath)
+
+        if torch.cuda.is_available():
+            self.model = self.model.cuda()
+            image = image.cuda()
+
+        dummy_batch = unsqueeze(image, 0)
+        embedding = self.model(dummy_batch)
+
+        return embedding
 
     def _create_person_dict(self) -> dict:
         """ Create a dict of person ID, anchor (first index) and positives """
         person_dict = dict()
         for index, image_subfolder in enumerate(self.image_filepaths):
+            if index%10 == 0:
+                print(f"Image filepath {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])
 
@@ -79,55 +138,87 @@ class FaceRecognitionDataset(Dataset):
             image_names = os.listdir(image_subfolder)
             image_names.sort()
 
-            # Each image is stored as a list of ID and filepath
+            # Each image is stored as a list of ID, filepath and embedding
             for image_name in image_names:
                 image_id = int(os.path.basename(image_name).split('.')[0])
                 image_filepath = join(self.dataset_folder, str(person_id), image_name)
-                image_list.append([person_id, image_id, image_filepath])
+                embedding = self._calculate_embedding(image_filepath)
+                image_list.append([person_id, image_id, image_filepath, embedding])
 
-            # For now use the first image as anchor; later use a more complex method
-            anchor = image_list[0]
+            # Anchor selection by minimal distance to the mean of all of a person's images
+            index = self._choose_anchor_image(image_list)
+            anchor = image_list[index]
 
-            # Add the anchor to the anchor_dict (only person ID and filapath needed)
-            self.anchor_dict[anchor[0]] = anchor[2]
+            # Add the anchor to the anchor_dict (key: person ID, value:[filepath, embedding])
+            self.anchor_dict[anchor[0]] = [anchor[2], anchor[3]]
 
-            image_list.pop(0)
+            # Remove the anchor images from the list of positives
+            del image_list[index]
 
-            person_dict[index] = [person_id, anchor, image_list]
+            person_dict[person_id] = [anchor, image_list]
 
         return person_dict
 
-    def get_personid_anchor_dict(self, person_dict: dict):
+    def get_personid_anchor_dict(self):
+
         person_id_anchor_dict = {}
 
-        for person in person_dict.values():
-            id = person[0]
-            anchor_patch = person[1][2]
-            person_id_anchor_dict[id] = anchor_patch
+        # person dict is now of shape [anchor, [positive, positive,...]] , thus:
+        for person in self.person_dict.items():
+            person_id = person[0]
+            anchor_path = person[1][0][2]
+            person_id_anchor_dict[person_id] = anchor_path
 
         return person_id_anchor_dict
 
     def _create_triplets(self) -> list:
         # This is the list of all images we sample from for negatives
-        all_images = []
-        for index, person in self.person_dict.items():
-            all_images.append(person[1])
-            for positive in person[2]:
-                all_images.append(positive)
 
         triplets = []
 
         for index, person in self.person_dict.items():
-            for positive in person[2]:
+            anchor_embedding = self.anchor_dict[index][1]
+            distances = []
+
+            # Get a dict of possible negatives for the anchor image with ascending distance
+            for negative_anchor in self.anchor_dict.items():
+                # Append ID and distance to the list to later select close negatives to anchor
+                distances.append(
+                    [negative_anchor[0],
+                     self.loss(anchor_embedding, negative_anchor[1][1]).item()])
+            distances.sort(key=lambda x: x[1])
+
+            number_of_negatives = 5
+
+            distances = distances[1:number_of_negatives + 1]
+
+            for positive in person[1]:
+                positive_embedding = positive[3]
                 negative_counter = 0
-                while negative_counter < 5:
-                    random_index = np.random.randint(low=0, high=len(all_images))
-                    # Do not use the same person as negative
-                    if all_images[random_index][0] != person[0]:
-                        triplets.append([person[1], positive, all_images[random_index]])
-                        negative_counter += 1
+                # Consider the top number_of_negatives closest anchors
+                while negative_counter < number_of_negatives:
+                    negative_person = self.person_dict[distances[negative_counter][0]]
+                    # Choose the closest sample of this person as a negative
+                    negatives_embeddings = [negative_person[0][3]]
+                    loss_list = []
+                    # Append all embedded samples of this negative person
+                    for image_information in negative_person[1]:
+                        negatives_embeddings.append(image_information[3])
+
+                    torch_embedding_list = stack(negatives_embeddings)
+
+                    for embedding in torch_embedding_list:
+                        loss_list.append(self.loss(embedding, positive_embedding))
+
+                    # Get the image with the smallest difference to the positive's embedding
+                    min_val, idx = min((min_val, idx) for (idx, min_val) in enumerate(loss_list))
+                    if idx == 0:
+                        negative = negative_person[0]
                     else:
-                        pass
+                        negative = negative_person[1][idx - 1]
+
+                    triplets.append([person[0], positive, negative])
+                    negative_counter += 1
 
         return triplets
 
@@ -159,5 +250,3 @@ class FaceRecognitionDataset(Dataset):
 
         # Return the resized images as a list and the label of the original (first) image
         return triplet_images, triplet[0][0]
-
-
