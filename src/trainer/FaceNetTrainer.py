@@ -253,6 +253,8 @@ class SiameseNetworkTrainer:
         :return: None
         """
 
+        self.start_time_training = time.time()
+
         if epochs:
             self.epochs = epochs
 
@@ -265,7 +267,8 @@ class SiameseNetworkTrainer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
 
-            if self.tensorboard_writer:
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs) \
+                and self.tensorboard_writer:
                 batch = iter(self.valid_loader).next()
                 self.inference_to_tensorboard(batch)
 
@@ -273,6 +276,8 @@ class SiameseNetworkTrainer:
                 print(
                     f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
+
+        self.end_time_training = time.time()
 
 
         if path_to_saved:
@@ -329,13 +334,18 @@ class SiameseNetworkTrainer:
         # Save model
         torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
 
+        duration = self.end_time_training - self.start_time_training
+        minutes = round(duration // 60, 0)
+        seconds = round(duration % 60, 0)
+
         # Save hyperparameter
         hyperparameter = {
             "date": date.strftime("%m/%d/%Y, %H:%M:%S"),
-            "git_commit_id": "70b70a7",  # ToDo: manually edit,
+            "git_commit_id": "32d8af0",  # ToDo: manually edit,
             "optimizer": str(self.optimizer),
             "loss_func": str(self.loss_func),
             "epochs": self.epochs,
+            "total_duration: ": f"{minutes}min {seconds}sec"
         }
 
         if self.optimizer_args:

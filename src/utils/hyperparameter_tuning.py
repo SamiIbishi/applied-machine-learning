@@ -35,8 +35,7 @@ use_full_dataset = False
 val_ratio = 0.1
 
 learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
-optimizers = [(CustomOptimizer.ADAM, "Adam"), (CustomOptimizer.Adagrad, "Adagrad"),
-              (CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD")]
+optimizers = [(CustomOptimizer.ADAM, "Adam"),(CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD"), (CustomOptimizer.Adagrad, "Adagrad")]
 pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")]
 # [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"),
 # (PretrainedModels.VGG19, "VGG19")]

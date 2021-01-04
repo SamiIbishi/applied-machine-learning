@@ -46,7 +46,7 @@ def get_optimizer(optimizer: typing.Union[str, 'CustomOptimizer'], optimizer_par
                              lr=optimizer_args['learning_rate'],
                              weight_decay=optimizer_args['weight_decay'],
                              )
-    elif (optimizer == CustomOptimizer.ADAM) or (optimizer in CustomOptimizer.Adam.value):
+    elif (optimizer == CustomOptimizer.ADAM) or (optimizer in CustomOptimizer.ADAM.value):
         return optim.Adam(params=optimizer_params,
                           lr=optimizer_args['learning_rate'],
                           betas=optimizer_args['betas'],
