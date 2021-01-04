@@ -31,19 +31,20 @@ if torch.cuda.is_available():
 # Configurations
 batch_size = 256  # 16
 epochs = 200
-use_full_dataset = False
+use_full_dataset = True
 val_ratio = 0.1
 
 learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
-optimizers = [(CustomOptimizer.ADAM, "Adam"),(CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD"), (CustomOptimizer.Adagrad, "Adagrad")]
+optimizers = [(CustomOptimizer.SGD, "SGD")]  #[(CustomOptimizer.ADAM, "Adam"),(CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD"), (CustomOptimizer.Adagrad, "Adagrad")]
 pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")]
 # [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"),
 # (PretrainedModels.VGG19, "VGG19")]
 
-logs_per_epoch = 10
+logs_per_epoch = 30
 image_logs_frequency = 5
+log_graph = False
 
-experiment_name = "FaceNet_TripletNetwork_5"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_6"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
@@ -99,14 +100,15 @@ for pretrained_model, model_name in pretrained_models:
                                       optimizer_params=model.parameters(),
                                       optimizer_args=default_optimizer_params)
 
-            # Log Model to tensorboard
-            images, ids = iter(train_loader).next()
-            if device == "cuda" and torch.cuda.is_available():
-                images = [images[0].cuda(), images[1].cuda(), images[2].cuda()]
-                model = model.cuda()
-            tensorboard_writer.add_graph(model, images)
-            time.sleep(10)
-            print("Wrote model graph to tensorboard")
+            if log_graph:
+                # Log Model to tensorboard
+                images, ids = iter(train_loader).next()
+                if device == "cuda" and torch.cuda.is_available():
+                    images = [images[0].cuda(), images[1].cuda(), images[2].cuda()]
+                    model = model.cuda()
+                tensorboard_writer.add_graph(model, images)
+                time.sleep(10)
+                print("Wrote model graph to tensorboard")
 
             trainer = FaceNetTrainer.SiameseNetworkTrainer(
                 model=model,

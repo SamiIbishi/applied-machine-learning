@@ -105,6 +105,9 @@ def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_match
 
     fig = plt.figure(figsize=(2.5 * len(images), 3))
     n = len(images)
+    if n > 16:
+        n = 16
+
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
 
