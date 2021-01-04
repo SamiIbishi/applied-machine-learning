@@ -43,10 +43,6 @@ pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")]
 logs_per_epoch = 10
 image_logs_frequency = 5
 
-datasetlength = 100
-
-log_frequency = int(datasetlength / logs_per_epoch)
-
 experiment_name = "FaceNet_TripletNetwork_5"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"

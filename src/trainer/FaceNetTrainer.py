@@ -341,11 +341,13 @@ class SiameseNetworkTrainer:
         # Save hyperparameter
         hyperparameter = {
             "date": date.strftime("%m/%d/%Y, %H:%M:%S"),
-            "git_commit_id": "32d8af0",  # ToDo: manually edit,
+            "git_commit_id": "7ed040d",  # ToDo: manually edit,
             "optimizer": str(self.optimizer),
             "loss_func": str(self.loss_func),
             "epochs": self.epochs,
-            "total_duration: ": f"{minutes}min {seconds}sec"
+            "batches in train": len(self.train_loader),
+            "batch size": len(iter(self.train_loader).next()[0][0]),
+            "total_duration: ": f"{minutes} min {seconds} sec"
         }
 
         if self.optimizer_args:
