@@ -197,7 +197,7 @@ class SiameseNetworkTrainer:
             for idx in range(len(dist_ap)):
                 total_prediction += 1
                 running_dist_an += dist_an[idx]
-                running_dist_ap += dist_an[idx]
+                running_dist_ap += dist_ap[idx]
                 if dist_ap[idx] < dist_an[idx]:
                     correct_prediction += 1
 
