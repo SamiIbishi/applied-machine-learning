@@ -31,7 +31,7 @@ if torch.cuda.is_available():
 # Configurations
 batch_size = 256  # 16
 epochs = 200
-use_full_dataset = True
+dataset_path = "../../data/celeba_dataset_medium/images/"
 val_ratio = 0.1
 
 learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
@@ -44,7 +44,7 @@ logs_per_epoch = 30
 image_logs_frequency = 5
 log_graph = False
 
-experiment_name = "FaceNet_TripletNetwork_6"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_7"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
@@ -56,10 +56,7 @@ default_optimizer_params = {
 }
 
 print("Creating dataset...")
-if use_full_dataset:
-    dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset/images/")
-else:
-    dataset = FaceRecognitionDataset(dataset_dir="../../data/celeba_dataset_small/images/")
+dataset = FaceRecognitionDataset(dataset_dir=dataset_path)
 
 print("Created dataset, len:", len(dataset))
 train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=val_ratio)
