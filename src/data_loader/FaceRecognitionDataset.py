@@ -6,6 +6,7 @@ from os.path import join
 import numpy as np
 from typing import List, Any, Union
 import operator
+import datetime
 
 # Torch Packages
 from torch.utils.data import Dataset
@@ -127,6 +128,7 @@ class FaceRecognitionDataset(Dataset):
     def _create_person_dict(self) -> dict:
         """ Create a dict of person ID, anchor (first index) and positives """
         person_dict = dict()
+        print(f"start anchor selection: {datetime.datetime.now()}")
         for index, image_subfolder in enumerate(self.image_filepaths):
             if index % 10 == 0:
                 print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
@@ -156,7 +158,7 @@ class FaceRecognitionDataset(Dataset):
             del image_list[index]
 
             person_dict[person_id] = [anchor, image_list]
-
+        print(f"finished anchor selection: {datetime.datetime.now()}")
         return person_dict
 
     def get_personid_anchor_dict(self):
@@ -173,10 +175,13 @@ class FaceRecognitionDataset(Dataset):
 
     def _create_triplets(self) -> list:
         # This is the list of all images we sample from for negatives
-
+        print(f"start triplet creation: {datetime.datetime.now()}")
         triplets = []
 
         for index, person in self.person_dict.items():
+            if index % 50 == 0:
+                print(f"Triplet creation {index} of {len(self.person_dict)}")
+
             anchor_embedding = self.anchor_dict[index][1]
             distances = []
 
@@ -220,6 +225,7 @@ class FaceRecognitionDataset(Dataset):
                     triplets.append([person[0], positive, negative])
                     negative_counter += 1
 
+        print(f"finished triplet creation: {datetime.datetime.now()}")
         return triplets
 
     def load_preprocessed_image(self, path: str, height: int = 224, width: int = 224) \

@@ -44,7 +44,7 @@ logs_per_epoch = 30
 image_logs_frequency = 5
 log_graph = False
 
-experiment_name = "FaceNet_TripletNetwork_7"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_9"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
