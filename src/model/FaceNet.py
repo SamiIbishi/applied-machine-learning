@@ -48,7 +48,7 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm1d(num_features=1024),
             nn.PReLU(num_parameters=1, init=0.3),
             nn.Linear(1024, num_embedding_dimensions),
-            nn.Sigmoid()
+            nn.Sigmoid() #ToDo: tanh
         )
 
         self.device = device

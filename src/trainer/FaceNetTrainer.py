@@ -361,3 +361,5 @@ class SiameseNetworkTrainer:
       # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
         with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
             json.dump(hyperparameter, write_file)
+
+        torch.save(self.model.anchor_embeddings, os.path.join(trainings_dir_path, 'anchor_embeddings'))
