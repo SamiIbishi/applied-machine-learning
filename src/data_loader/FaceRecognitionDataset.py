@@ -33,7 +33,7 @@ class FaceRecognitionDataset(Dataset):
     # Dataset class for handling .jpg files in celeba dataset
 
     def __init__(self, dataset_dir: str, image_width: int = 224,
-                 image_height: int = 224):
+                 image_height: int = 224, overwrite_dicts: bool = False):
         """
         Creates a data set object from given data set directory.
 
@@ -73,10 +73,29 @@ class FaceRecognitionDataset(Dataset):
         # Get all the subfolders of the different persons
         self.image_filepaths = [f.path for f in os.scandir(self.dataset_folder) if f.is_dir()]
 
-        self.person_dict = self._create_person_dict()
+        self.person_dict_path = os.path.join(self.dataset_folder, ".." ,"person_dict.npy")
+        self.triplets_path = os.path.join(self.dataset_folder, "..", "triplets.npy")
+        self.anchor_dict_path = os.path.join(self.dataset_folder, "..", "anchor_dict.npy")
+
+        if ((not overwrite_dicts) and (os.path.exists(self.person_dict_path)) and (os.path.exists(self.anchor_dict_path))):
+            self.person_dict = np.load(self.person_dict_path, allow_pickle=True).item()
+            self.anchor_dict = np.load(self.anchor_dict_path, allow_pickle=True).item()
+            print("loaded persons dict from file: ", self.person_dict_path)
+            print("loaded anchor dict from file: ", self.anchor_dict_path)
+        else:
+            self.person_dict = self._create_person_dict()
+            np.save(self.person_dict_path, self.person_dict)
+            np.save(self.anchor_dict_path, self.anchor_dict)
+            print("saved persons dict to file: ", self.person_dict_path)
 
         # Get the triplets of original, similar, random
-        self.triplets = self._create_triplets()
+        if ((not overwrite_dicts) and (os.path.exists(self.triplets_path))):
+            self.triplets = list(np.load(self.triplets_path, allow_pickle=True))
+            print("loaded triplets from file: ", self.triplets_path)
+        else:
+            self.triplets = self._create_triplets()
+            np.save(self.triplets_path, self.triplets)
+            print("saved triplets dict to file: ", self.triplets_path)
 
     def get_anchor_dict(self):
         """ External method to retrieve the generated anchor_dict"""
