@@ -6,6 +6,7 @@ from os.path import join
 import numpy as np
 from typing import List, Any, Union
 import operator
+import datetime
 
 # Torch Packages
 from torch.utils.data import Dataset
@@ -32,7 +33,7 @@ class FaceRecognitionDataset(Dataset):
     # Dataset class for handling .jpg files in celeba dataset
 
     def __init__(self, dataset_dir: str, image_width: int = 224,
-                 image_height: int = 224):
+                 image_height: int = 224, overwrite_dicts: bool = False):
         """
         Creates a data set object from given data set directory.
 
@@ -72,10 +73,29 @@ class FaceRecognitionDataset(Dataset):
         # Get all the subfolders of the different persons
         self.image_filepaths = [f.path for f in os.scandir(self.dataset_folder) if f.is_dir()]
 
-        self.person_dict = self._create_person_dict()
+        self.person_dict_path = os.path.join(self.dataset_folder, ".." ,"person_dict.npy")
+        self.triplets_path = os.path.join(self.dataset_folder, "..", "triplets.npy")
+        self.anchor_dict_path = os.path.join(self.dataset_folder, "..", "anchor_dict.npy")
+
+        if ((not overwrite_dicts) and (os.path.exists(self.person_dict_path)) and (os.path.exists(self.anchor_dict_path))):
+            self.person_dict = np.load(self.person_dict_path, allow_pickle=True).item()
+            self.anchor_dict = np.load(self.anchor_dict_path, allow_pickle=True).item()
+            print("loaded persons dict from file: ", self.person_dict_path)
+            print("loaded anchor dict from file: ", self.anchor_dict_path)
+        else:
+            self.person_dict = self._create_person_dict()
+            np.save(self.person_dict_path, self.person_dict)
+            np.save(self.anchor_dict_path, self.anchor_dict)
+            print("saved persons dict to file: ", self.person_dict_path)
 
         # Get the triplets of original, similar, random
-        self.triplets = self._create_triplets()
+        if ((not overwrite_dicts) and (os.path.exists(self.triplets_path))):
+            self.triplets = list(np.load(self.triplets_path, allow_pickle=True))
+            print("loaded triplets from file: ", self.triplets_path)
+        else:
+            self.triplets = self._create_triplets()
+            np.save(self.triplets_path, self.triplets)
+            print("saved triplets dict to file: ", self.triplets_path)
 
     def get_anchor_dict(self):
         """ External method to retrieve the generated anchor_dict"""
@@ -127,9 +147,10 @@ class FaceRecognitionDataset(Dataset):
     def _create_person_dict(self) -> dict:
         """ Create a dict of person ID, anchor (first index) and positives """
         person_dict = dict()
+        print(f"start anchor selection: {datetime.datetime.now()}")
         for index, image_subfolder in enumerate(self.image_filepaths):
-            if index%10 == 0:
-                print(f"Image filepath {index} of {len(self.image_filepaths)}")
+            if index % 10 == 0:
+                print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])
 
@@ -156,7 +177,7 @@ class FaceRecognitionDataset(Dataset):
             del image_list[index]
 
             person_dict[person_id] = [anchor, image_list]
-
+        print(f"finished anchor selection: {datetime.datetime.now()}")
         return person_dict
 
     def get_personid_anchor_dict(self):
@@ -173,10 +194,13 @@ class FaceRecognitionDataset(Dataset):
 
     def _create_triplets(self) -> list:
         # This is the list of all images we sample from for negatives
-
+        print(f"start triplet creation: {datetime.datetime.now()}")
         triplets = []
 
         for index, person in self.person_dict.items():
+            if index % 50 == 0:
+                print(f"Triplet creation {index} of {len(self.person_dict)}")
+
             anchor_embedding = self.anchor_dict[index][1]
             distances = []
 
@@ -220,6 +244,7 @@ class FaceRecognitionDataset(Dataset):
                     triplets.append([person[0], positive, negative])
                     negative_counter += 1
 
+        print(f"finished triplet creation: {datetime.datetime.now()}")
         return triplets
 
     def load_preprocessed_image(self, path: str, height: int = 224, width: int = 224) \

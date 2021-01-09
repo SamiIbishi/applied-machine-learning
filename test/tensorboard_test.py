@@ -1,4 +1,4 @@
-import utils.utils_images as img_util
+import src.utils.utils_images as img_util
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -9,7 +9,7 @@ import torch.optim as optim
 
 from torch.utils.tensorboard import SummaryWriter
 
-import src.utils.mytensorboard as tb
+import src.utils.utils_tensorboard as tb
 
 if __name__ == '__main__':
     # transforms

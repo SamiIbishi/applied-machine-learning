@@ -26,9 +26,9 @@ class SiameseNetwork(nn.Module):
     def __init__(
             self,
             input_size: int = 224,
-            num_embedding_dimensions: int = 32,
+            num_embedding_dimensions: int = 1024,
             num_features: int = 2048,
-            pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
+            pretrained_model: typing.Union[str, 'PretrainedModels']=PretrainedModels.DenseNet,
             device: str = 'cpu'
     ):
         super(SiameseNetwork, self).__init__()
@@ -48,7 +48,7 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm1d(num_features=1024),
             nn.PReLU(num_parameters=1, init=0.3),
             nn.Linear(1024, num_embedding_dimensions),
-            nn.Sigmoid()
+            nn.Sigmoid() #ToDo: tanh
         )
 
         self.device = device
@@ -60,7 +60,7 @@ class SiameseNetwork(nn.Module):
         :param x: Images tensor.
         :return: Embedding of input images.
         """
-        if self.device == "cuda" and torch.cuda.is_available() :
+        if self.device == "cuda" and torch.cuda.is_available():
             x = x.cuda()
 
         # Image Embedding
@@ -85,13 +85,15 @@ class SiameseNetwork(nn.Module):
 
         return anchor_output, positive_output, negative_output
 
-    def inference(self, input_image, use_threshold: bool = True, threshold: int = 10, fuzzy_matches: bool = True):
+    def inference(self, input_image, use_threshold: bool = True, threshold: int = 10,
+                  fuzzy_matches: bool = True):
         """
         Recognize identity in input images.
 
-        Process: Propagates the input images through the trained model to embed it. Then uses the emb_input to calculate
-        the distance to all anchor embeddings. The smallest distance indicates the identity. Additionally a threshold
-        can be used to make sure that unknown people are not wrongly identified as a known person (from the database).
+        Process: Propagates the input images through the trained model to embed it. Then uses the
+        emb_input to calculate the distance to all anchor embeddings. The smallest distance
+        indicates the identity. Additionally a threshold can be used to make sure that unknown
+        people are not wrongly identified as a known person (from the database).
 
         :param input_image: Image of person to be verified/recognized.
         :param use_threshold: Inference ID with dist < threshold, else smallest dist.
@@ -114,22 +116,24 @@ class SiameseNetwork(nn.Module):
                 matched_ids = list()
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist <= threshold:
-                        matched_ids.append((person_id, round(dist, 2)))   # all ids with dists smaller than threshold
+                    if dist <= threshold:  # all ids with dists smaller than threshold
+                        matched_ids.append((person_id, round(dist, 2)))
                 matched_ids.sort(key=lambda x: x[1])
             else:
                 smallest_distance = float("inf")
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
                     if dist < use_threshold and dist < smallest_distance:
+                        # id with the smallest dist and smaller than threshold
                         smallest_distance = dist
-                        matched_ids = person_id                 # id with the smallest dist and smaller than threshold
+                        matched_ids = person_id
         else:
             if fuzzy_matches:
                 matched_ids = list()
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    matched_ids.append((person_id, round(dist, 2)))   # all ids with dists smaller than threshold
+                    matched_ids.append(
+                        (person_id, round(dist, 2)))  # all ids with dists smaller than threshold
                 matched_ids.sort(key=lambda x: x[1])
             else:
                 smallest_distance = float("inf")
@@ -137,7 +141,7 @@ class SiameseNetwork(nn.Module):
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
                     if dist < smallest_distance:
                         smallest_distance = dist
-                        matched_ids = person_id                     # id with with the smallest distance
+                        matched_ids = person_id  # id with with the smallest distance
 
         if matched_ids is None:
             return "-1", "Unknown person. No identity match found!"
@@ -146,11 +150,12 @@ class SiameseNetwork(nn.Module):
         else:
             return matched_ids, "Best match!"
 
-    def create_anchor_embeddings(self, anchor_dict, embedding_path: typing.Optional[str] = None) -> None:
+    def create_anchor_embeddings(self, anchor_dict,
+                                 embedding_path: typing.Optional[str] = None) -> None:
         """
-        Takes all anchor images and embeds them with the trained model. The created dictionary is add as a new
-        member variable. Additionally, if a path is passed as an argument, the created dictionary
-        will be stored as '.pt' file.
+        Takes all anchor images and embeds them with the trained model. The created dictionary is
+        add as a new member variable. Additionally, if a path is passed as an argument, the created
+        dictionary will be stored as '.pt' file.
 
         :param anchor_dict: Dictionary with person ids as keys and the image paths as values.
         :param embedding_path: The path/filename in order to store the created anchor_embeddings.
@@ -166,7 +171,8 @@ class SiameseNetwork(nn.Module):
 
     def load_anchor_embeddings(self, embedding_path: typing.Optional[str] = None) -> None:
         """
-        Loads a dictionary containing all anchor embeddings with their respective ids {'id': emb_tensor}.
+        Loads a dictionary containing all anchor embeddings with their respective ids
+        {'id': emb_tensor}.
 
         :param embedding_path: Path to stored '.pt' file containing reference dictionary.
         :return: None

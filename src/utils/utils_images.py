@@ -6,6 +6,7 @@ import torchvision
 
 to_pil = torchvision.transforms.ToPILImage()
 
+
 def images_to_probs(net, images):
     '''
     Generates predictions and corresponding probabilities from a trained
@@ -50,6 +51,9 @@ def plot_classes_preds(net, images, labels, classes):
     # plot the images in the batch, along with predicted and true labels
     fig = plt.figure(figsize=(12, 6))
     n = len(images)
+    if len(images) > 16:
+        n = 16
+
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
         matplotlib_imshow(images[idx], one_channel=True)
@@ -61,10 +65,13 @@ def plot_classes_preds(net, images, labels, classes):
 
     return fig
 
+
 def plot_images_with_distances(images, dist_an, dist_ap):
     batch_size = len(images[0])
+    if len(images[0]) > 16:
+        batch_size = 16
 
-    fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3*batch_size))
+    fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3 * batch_size))
     for idx, row in enumerate(ax_arr):
 
         for i, ax in enumerate(row):
@@ -72,18 +79,19 @@ def plot_images_with_distances(images, dist_an, dist_ap):
             if i == 0:
                 ax.set_title(f'Anchor')
             else:
-                match = dist_ap[idx]<dist_an[idx]
+                match = dist_ap[idx] < dist_an[idx]
                 if i == 1:
                     ax_title = f'Positive Match Anchor: {match}\ndist_ap: {dist_ap[idx].item()}'
                 if i == 2:
                     ax_title = f'Negative Match Anchor: {not match}\ndist_an: {dist_an[idx].item()}'
 
-                ax.set_title(ax_title, color= "green" if match else "red")
+                ax.set_title(ax_title, color="green" if match else "red")
             ax.imshow(img)
 
     fig.suptitle('Displaying random triplets with their predicted distances', fontsize=16)
 
     return fig
+
 
 def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_matches=True):
     '''
@@ -95,8 +103,11 @@ def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_match
     '''
     # plot the images in the batch, along with predicted and true labels
 
-    fig = plt.figure(figsize=(2.5*len(images), 3))
+    fig = plt.figure(figsize=(2.5 * len(images), 3))
     n = len(images)
+    if n > 16:
+        n = 16
+
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])
 
@@ -114,7 +125,8 @@ def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_match
                         fuzz_match_idx = i
                         match_dist = match[1]
                 if fuzzy_match:
-                    title = f"fuzzy match:\npos: {fuzz_match_idx}, dist: {match_dist}\n(label: {labels[idx]})"
+                    title = f"fuzzy match:\npos: {fuzz_match_idx}, " \
+                            f"dist: {match_dist}\n(label: {labels[idx]})"
                     color = "orange"
                 else:
                     title = f"Wrong prediction:\n(label: {labels[idx]})"

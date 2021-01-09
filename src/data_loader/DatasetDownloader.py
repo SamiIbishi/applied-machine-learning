@@ -97,28 +97,29 @@ class DatasetDownloader:
                     os.remove(join(self.dataset_folder, image))
 
 
-
 def download_dataset(local: bool = True):
     """
     :param local: on a local machine only use subset of the data. on a server uses full dataset
     """
+    base_data_dir = "../../data"
+    dataset_dir = base_data_dir + "/celeba_dataset_medium"
 
     # Create the directories if necessary
-    if not os.path.exists("../data"):
-        os.makedirs("../data")
+    if not os.path.exists(base_data_dir):
+        os.makedirs(base_data_dir)
 
-    if not os.path.exists("../data/celeba_dataset"):
-        os.makedirs("../data/celeba_dataset")
-        os.makedirs("../data/celeba_dataset/images")
+    if not os.path.exists(dataset_dir):
+        os.makedirs(dataset_dir)
+        os.makedirs(dataset_dir + "/images")
 
         # Subset of the dataset
         if local:
-            DatasetDownloader(dataset_dir="../data/celeba_dataset",
+            DatasetDownloader(dataset_dir=dataset_dir,
                               url='https://drive.google.com/uc?id'
                                   '=1Y3LkdANNDsdq_6_Vwkauz_CzUCuXrSmX',
                               filename="labels.txt", unzip=False)
 
-            DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
+            DatasetDownloader(dataset_dir=dataset_dir + "/images",
                               url='https://drive.google.com/uc?id=1'
                                   '-gkTnvMb8ojsW1cFFkL4JA1CAy1xa6UH',
                               filename="images.zip", unzip=True, preprocess=True,
@@ -126,14 +127,16 @@ def download_dataset(local: bool = True):
 
         # Full dataset
         else:
-            DatasetDownloader(dataset_dir="../data/celeba_dataset",
+            DatasetDownloader(dataset_dir=dataset_dir,
                               url='https://drive.google.com/uc?id'
                                   '=1BEk3Lyw89zMWdCs9RT5G6bPQ5QMiEVuY',
                               filename="labels.txt", unzip=False)
 
-            DatasetDownloader(dataset_dir="../data/celeba_dataset/images",
+            DatasetDownloader(dataset_dir=dataset_dir + "/images",
                               url='https://drive.google.com/uc?id'
                                   '=1Uqqt7EDq1gQp6hfOixVG8vZUtBVBMwVg',
                               filename="images.zip", unzip=True, preprocess=True,
-                              number_of_positives=10)
+                              number_of_positives=29)
 
+
+download_dataset(False)
