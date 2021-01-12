@@ -21,8 +21,6 @@ PRETRAINED_MODEL_PATH = Path("pretrained_model/model")
 
 # Streamlit encourages well-structured code, like starting execution in a main() function.
 def main():
-    # Render the readme as markdown using st.markdown.
-    readme_text = st.markdown(get_file_content_as_string("README.md"))
 
     # FaceNet Model
     FaceNet = load_pretrained_model()
@@ -35,15 +33,21 @@ def main():
 
     if app_mode == "Tutorial":
         st.sidebar.text("Load images for tutorial...")
-        anchor_files = load_tutorial_anchor_images()
-        test_image_files = load_tutorial_test_images()
+        image_files = st.file_uploader("Select anchor image", type=['jpg', 'png', 'jpeg'])
+        if image_files is not None:
+            our_image = Image.open(image_files)
+            st.text("Original Image")
+            # st.write(type(our_image))
+            st.image(our_image)
 
+        # FaceNet.create_anchor_embeddings(anchor_dict=anchor_files)
+        st.write("########### TESTTESTTEST ###############")
+        # anchor_selection = st.sidebar.selectbox("Select Person to verify:", list(anchor_files.keys()))
         st.sidebar.success("Loaded all tutorial images successfully!")
-    elif app_mode == "Show the source code":
-        readme_text.empty()
-        st.code(get_file_content_as_string("streamlit_app.py"))
+    elif app_mode == "About":
+        # General explanation what this illustration should be used for
+        st.write("########### BLABLABLA ###############")
     elif app_mode == "Run the app":
-        readme_text.empty()
         run_the_app()
 
 
@@ -60,57 +64,9 @@ def print_image(image_file):
 @st.cache()
 def load_pretrained_model():
     model = SiameseNetwork()
-    model.load_state_dict(torch.load(PRETRAINED_MODEL_PATH))
+    model.load_state_dict(torch.load(PRETRAINED_MODEL_PATH, map_location=torch.device("cpu")))
     model.eval()
     return model
-
-
-# Download a single file and make its content available as a string.
-@st.cache(show_spinner=False)
-def get_file_content_as_string(path):
-    url = 'https://raw.githubusercontent.com/streamlit/demo-self-driving/master/' + path
-    response = urllib.request.urlopen(url)
-    return response.read().decode("utf-8")
-
-
-def load_tutorial_anchor_images(tutorial_folder: str = "./tutorial"):
-    """
-
-    :param tutorial_folder:
-    :return:
-    """
-
-    anchor_images = Path("./tutorial_images/test_images")
-
-    anchor_files = [f.path for f in anchor_images.glob("./*") if f.is_file()]
-
-    anchor = {}
-    for index, anchor_files_path in enumerate(anchor_files):
-
-        anchor[anchor_files_path.name] = st.file_uploader(anchor_files_path, type=['jpg', 'png', 'jpeg'])
-
-    return anchor
-
-
-def load_tutorial_test_images():
-    """
-
-    :param tutorial_folder:
-    :return:
-    """
-
-    test_images = Path("./tutorial_images/test_images")
-
-    if not test_images.is_dir():
-        return None
-
-    image_files = [f.path for f in test_images.glob("./*") if f.is_file()]
-
-    images = []
-    for index, img_path in enumerate(image_files):
-        images.append(st.file_uploader(img_path, type=['jpg', 'png', 'jpeg']))
-
-    return images
 
 
 # This is the main app app itself, which appears when the user selects "Run the app".
