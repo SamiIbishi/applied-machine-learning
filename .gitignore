@@ -20,3 +20,9 @@ src/data/toy_dataset/images/
 src/data/toy_dataset/
 
 src/saved/models/
+
+pretrained_model/
+
+tutorial_images/anchor_images/
+
+tutorial_images/test_images/
