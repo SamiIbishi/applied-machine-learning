@@ -36,8 +36,10 @@ class SiameseNetwork(nn.Module):
         self.input_size = input_size
         self.anchor_embeddings = dict()
         self.num_features = num_features
+        self.num_embedding_dimensions = num_embedding_dimensions
+        self.pretrained_model = pretrained_model
         self.feature_extractor = get_pretrained_model(
-            pretrained_model=pretrained_model,
+            pretrained_model=self.pretrained_model,
             num_output_features=self.num_features
         )
         self.image_embedding = nn.Sequential(
@@ -47,7 +49,7 @@ class SiameseNetwork(nn.Module):
             nn.Linear(self.num_features, 1024),
             nn.BatchNorm1d(num_features=1024),
             nn.PReLU(num_parameters=1, init=0.3),
-            nn.Linear(1024, num_embedding_dimensions),
+            nn.Linear(1024, self.num_embedding_dimensions),
             nn.Sigmoid() #ToDo: tanh
         )
 
@@ -85,7 +87,7 @@ class SiameseNetwork(nn.Module):
 
         return anchor_output, positive_output, negative_output
 
-    def inference(self, input_image, use_threshold: bool = True, threshold: int = 10,
+    def inference(self, input_image, use_threshold: bool = True, threshold: float = 10.0,
                   fuzzy_matches: bool = True):
         """
         Recognize identity in input images.
@@ -116,16 +118,14 @@ class SiameseNetwork(nn.Module):
                 matched_ids = list()
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist <= threshold:  # all ids with dists smaller than threshold
+                    if abs(dist) <= threshold:  # all ids with dists smaller than threshold
                         matched_ids.append((person_id, round(dist, 2)))
                 matched_ids.sort(key=lambda x: x[1])
             else:
-                smallest_distance = float("inf")
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist < use_threshold and dist < smallest_distance:
+                    if abs(dist) <= threshold:
                         # id with the smallest dist and smaller than threshold
-                        smallest_distance = dist
                         matched_ids = person_id
         else:
             if fuzzy_matches:
@@ -139,11 +139,11 @@ class SiameseNetwork(nn.Module):
                 smallest_distance = float("inf")
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist < smallest_distance:
+                    if abs(dist) < smallest_distance:
                         smallest_distance = dist
                         matched_ids = person_id  # id with with the smallest distance
 
-        if matched_ids is None:
+        if matched_ids is None or not matched_ids:
             return "-1", "Unknown person. No identity match found!"
         elif isinstance(matched_ids, list):
             return matched_ids[:5], "Top 5 potential matches! (ordered by distance)"
