@@ -4,6 +4,7 @@ import os
 import time
 import typing
 import datetime
+import numpy as np
 
 # Torch Packages
 import torch
@@ -279,7 +280,6 @@ class SiameseNetworkTrainer:
 
         self.end_time_training = time.time()
 
-
         if path_to_saved:
             self.save_training(path_to_saved)
 
@@ -334,6 +334,14 @@ class SiameseNetworkTrainer:
         # Save model
         torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
 
+        # model parameter
+        model_parameter = {
+            "input_size": self.model.input_size,
+            "num_features": self.num_features,
+            "num_embedding_dimensions": self.num_embedding_dimensions,
+            "pretrained_model": self.pretrained_model
+        }
+
         duration = self.end_time_training - self.start_time_training
         minutes = round(duration // 60, 0)
         seconds = round(duration % 60, 0)
@@ -358,8 +366,13 @@ class SiameseNetworkTrainer:
             for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
-      # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
-        with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
-            json.dump(hyperparameter, write_file)
+        np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
+        # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
+        # with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
+        #     json.dump(hyperparameter, write_file)
+
+        np.save(os.path.join(trainings_dir_path, 'model_parameter.npy'), model_parameter)
+        # with open(os.path.join(trainings_dir_path, 'model_parameter.json'), "w") as write_file:
+        #     json.dump(model_parameter, write_file)
 
         torch.save(self.model.anchor_embeddings, os.path.join(trainings_dir_path, 'anchor_embeddings'))
