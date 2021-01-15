@@ -27,28 +27,31 @@ class SiameseNetwork(nn.Module):
             self,
             input_size: int = 224,
             num_embedding_dimensions: int = 4096,
-            num_features: int = 2048,
+            num_features: int = 4096,
             pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
             device: str = 'cpu'
     ):
         super(SiameseNetwork, self).__init__()
 
         self.input_size = input_size
-        self.anchor_embeddings = dict()
+        self.num_embedding_dimensions = num_embedding_dimensions
         self.num_features = num_features
+        self.pretrained_model = pretrained_model
+
+        self.anchor_embeddings = dict()
         self.feature_extractor = get_pretrained_model(
-            pretrained_model=pretrained_model,
+            pretrained_model=self.pretrained_model,
             num_output_features=self.num_features
         )
         self.image_embedding = nn.Sequential(
-            nn.Linear(self.num_features, 2048),
-            nn.BatchNorm1d(num_features=2048),
+            nn.Linear(self.num_features, 4096),
+            nn.BatchNorm1d(num_features=4096),
             nn.PReLU(num_parameters=1, init=0.3),
-            nn.Linear(self.num_features, 1024),
-            nn.BatchNorm1d(num_features=1024),
+            nn.Linear(self.num_features, 4096),
+            nn.BatchNorm1d(num_features=4096),
             nn.PReLU(num_parameters=1, init=0.3),
-            nn.Linear(1024, num_embedding_dimensions),
-            nn.Sigmoid() #ToDo: tanh
+            nn.Linear(4096, num_embedding_dimensions),
+            nn.Sigmoid() #ToDo: nn.Tanh() oder nn.Softmax()
         )
 
         self.device = device
@@ -85,7 +88,7 @@ class SiameseNetwork(nn.Module):
 
         return anchor_output, positive_output, negative_output
 
-    def inference(self, input_image, use_threshold: bool = True, threshold: int = 10, fuzzy_matches: bool = True):
+    def inference(self, input_image, use_threshold: bool = True, threshold: float = 10.0, fuzzy_matches: bool = True):
         """
         Recognize identity in input images.
 
@@ -118,12 +121,10 @@ class SiameseNetwork(nn.Module):
                         matched_ids.append((person_id, round(dist, 2)))
                 matched_ids.sort(key=lambda x: x[1])
             else:
-                smallest_distance = float("inf")
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist < use_threshold and dist < smallest_distance:
+                    if abs(dist) <= threshold:
                         # id with the smallest dist and smaller than threshold
-                        smallest_distance = dist
                         matched_ids = person_id
         else:
             if fuzzy_matches:
@@ -141,7 +142,7 @@ class SiameseNetwork(nn.Module):
                         smallest_distance = dist
                         matched_ids = person_id  # id with with the smallest distance
 
-        if matched_ids is None:
+        if matched_ids is None or not matched_ids:
             return "-1", "Unknown person. No identity match found!"
         elif isinstance(matched_ids, list):
             return matched_ids[:5], "Top 5 potential matches! (ordered by distance)"

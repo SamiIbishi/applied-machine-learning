@@ -31,7 +31,7 @@ if torch.cuda.is_available():
 # Configurations
 batch_size = 256  # 16
 epochs = 200
-dataset_path = "../../data/celeba_dataset_medium/images/"
+dataset_path = "../../data/celeba_dataset_small/images/"
 val_ratio = 0.1
 
 learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
@@ -44,7 +44,7 @@ logs_per_epoch = 30
 image_logs_frequency = 5
 log_graph = False
 
-experiment_name = "FaceNet_TripletNetwork_10"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_11"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {

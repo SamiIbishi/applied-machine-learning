@@ -15,6 +15,7 @@ from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_defaul
 from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, \
     get_default_loss_function
 import src.utils.utils_images as img_util
+import numpy as np
 
 
 # Template to modify
@@ -350,6 +351,16 @@ class SiameseNetworkTrainer:
             "total_duration: ": f"{minutes} min {seconds} sec"
         }
 
+        # model parameter
+        model_parameter = {
+            "input_size": self.model.input_size,
+            "num_features": self.model.num_features,
+            "num_embedding_dimensions": self.model.num_embedding_dimensions,
+            "pretrained_model": self.model.pretrained_model
+        }
+
+        np.save(os.path.join(trainings_dir_path, 'model_parameter.npy'), model_parameter)
+
         if self.optimizer_args:
             for opt_arg, opt_arg_value in self.optimizer_args.items():
                 hyperparameter['optimizer_arg_' + opt_arg] = opt_arg_value
@@ -359,7 +370,6 @@ class SiameseNetworkTrainer:
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
       # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
-        with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
-            json.dump(hyperparameter, write_file)
+        np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
 
         torch.save(self.model.anchor_embeddings, os.path.join(trainings_dir_path, 'anchor_embeddings'))
