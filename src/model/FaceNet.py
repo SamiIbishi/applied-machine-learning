@@ -37,12 +37,13 @@ class SiameseNetwork(nn.Module):
         self.num_embedding_dimensions = num_embedding_dimensions
         self.num_features = num_features
         self.pretrained_model = pretrained_model
-
         self.anchor_embeddings = dict()
+        
         self.feature_extractor = get_pretrained_model(
             pretrained_model=self.pretrained_model,
             num_output_features=self.num_features
         )
+        
         self.image_embedding = nn.Sequential(
             nn.Linear(self.num_features, 4096),
             nn.BatchNorm1d(num_features=4096),
@@ -121,7 +122,8 @@ class SiameseNetwork(nn.Module):
                 matched_ids = list()
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist <= threshold:  # all ids with dists smaller than threshold
+                    if abs(dist) <= threshold:  # all ids with dists smaller than threshold
+
                         matched_ids.append((person_id, round(dist, 2)))
                 matched_ids.sort(key=lambda x: x[1])
             else:
@@ -142,7 +144,7 @@ class SiameseNetwork(nn.Module):
                 smallest_distance = float("inf")
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    if dist < smallest_distance:
+                    if abs(dist) < smallest_distance:
                         smallest_distance = dist
                         matched_ids = person_id  # id with with the smallest distance
 

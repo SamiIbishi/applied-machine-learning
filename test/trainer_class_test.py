@@ -11,7 +11,6 @@ import src.utils.utils_images as img_util
 
 batch_size = 16
 
-
 if __name__ == '__main__':
     to_pil_image = torchvision.transforms.ToPILImage()
 

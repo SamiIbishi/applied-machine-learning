@@ -4,6 +4,7 @@ import os
 import time
 import typing
 import datetime
+import numpy as np
 
 # Torch Packages
 import torch
@@ -75,7 +76,7 @@ class SiameseNetworkTrainer:
         elif optimizer:
             self.optimizer = optimizer
         else:
-            self.optimizer = get_default_optimizer(params_to_update)     # default optimizer
+            self.optimizer = get_default_optimizer(params_to_update)  # default optimizer
 
         # Hyperparameter - Loss Function
         self.loss_func_args = loss_func_args
@@ -86,7 +87,7 @@ class SiameseNetworkTrainer:
         elif loss_func:
             self.loss_func = loss_func
         else:
-            self.loss_func = get_default_loss_function()   # default loss function
+            self.loss_func = get_default_loss_function()  # default loss function
 
         # write to tensorboard
         if tensorboard_writer:
@@ -351,6 +352,7 @@ class SiameseNetworkTrainer:
             "batches in train": len(self.train_loader),
             "batch size": len(iter(self.train_loader).next()[0][0]),
             "total_duration: ": f"{minutes} min {seconds} sec"
+
         }
 
         # model parameter
@@ -359,9 +361,8 @@ class SiameseNetworkTrainer:
             "num_features": self.model.num_features,
             "num_embedding_dimensions": self.model.num_embedding_dimensions,
             "pretrained_model": self.model.pretrained_model
-        }
 
-        np.save(os.path.join(trainings_dir_path, 'model_parameter.npy'), model_parameter)
+        }
 
         if self.optimizer_args:
             for opt_arg, opt_arg_value in self.optimizer_args.items():
@@ -371,6 +372,8 @@ class SiameseNetworkTrainer:
             for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
+        np.save(os.path.join(trainings_dir_path, 'model_parameter.npy'), model_parameter)
+ 
         # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
         np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
 

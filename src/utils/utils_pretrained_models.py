@@ -25,6 +25,7 @@ def set_parameter_requires_grad(model, feature_extracting: bool = True):
     :param model: Pretrained model with pretrained parameters.
     :param feature_extracting: Purpose of the pretrained model. True if only to extract features,
     false otherwise.
+
     :return:
     """
     if feature_extracting:
