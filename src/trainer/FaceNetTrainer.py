@@ -106,7 +106,7 @@ class SiameseNetworkTrainer:
 
         start_time = time.time()
         running_loss = 0
-        total_loss=0
+        total_loss = 0
 
         for batch_idx, (images, _) in enumerate(self.train_loader):
             # Get input from data loader
@@ -140,7 +140,7 @@ class SiameseNetworkTrainer:
             if batch_idx % self.log_frequency == self.log_frequency - 1 or batch_idx == len(
                     self.train_loader) - 1:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
-                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx % self.log_frequency +1)
+                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx % self.log_frequency + 1)
                 print(f"{header} => running trainings loss: {epoch_loss:.2f}")
                 if self.tensorboard_writer:
                     self.tensorboard_writer.log_training_loss(epoch_loss, batch_idx)
@@ -225,7 +225,8 @@ class SiameseNetworkTrainer:
                 running_dist_ap = 0
                 running_dist_an = 0
 
-            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs)  \
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or
+                epoch == self.epochs) \
                     and batch_idx == 0\
                     and self.tensorboard_writer:
                 # Print the first batch of images with their distances to tensorboard
@@ -268,18 +269,19 @@ class SiameseNetworkTrainer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
 
-            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs) \
-                and self.tensorboard_writer:
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or
+                    epoch == self.epochs) \
+                    and self.tensorboard_writer:
+
                 batch = iter(self.valid_loader).next()
                 self.inference_to_tensorboard(batch)
 
-            if epoch_loss < 10:
+            if epoch_loss < 1:
                 print(
                     f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
 
         self.end_time_training = time.time()
-
 
         if path_to_saved:
             self.save_training(path_to_saved)
@@ -369,7 +371,8 @@ class SiameseNetworkTrainer:
             for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
-      # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
+        # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
         np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
 
-        torch.save(self.model.anchor_embeddings, os.path.join(trainings_dir_path, 'anchor_embeddings'))
+        torch.save(self.model.anchor_embeddings,
+                   os.path.join(trainings_dir_path, 'anchor_embeddings'))

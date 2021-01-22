@@ -71,7 +71,7 @@ def plot_images_with_distances(images, dist_an, dist_ap):
     if len(images[0]) > 16:
         batch_size = 16
 
-    fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3 * batch_size))
+    fig, ax_arr = plt.subplots(batch_size, 3, figsize=(16, 3.5 * batch_size))
     for idx, row in enumerate(ax_arr):
 
         for i, ax in enumerate(row):
@@ -103,10 +103,11 @@ def plot_classes_preds_face_recognition(images, labels, predictions, fuzzy_match
     '''
     # plot the images in the batch, along with predicted and true labels
 
-    fig = plt.figure(figsize=(2.5 * len(images), 3))
     n = len(images)
     if n > 16:
         n = 16
+
+    fig = plt.figure(figsize=(2.5 * n, 4))
 
     for idx in np.arange(n):
         ax = fig.add_subplot(1, n, idx + 1, xticks=[], yticks=[])

@@ -28,7 +28,7 @@ class SiameseNetwork(nn.Module):
             input_size: int = 224,
             num_embedding_dimensions: int = 4096,
             num_features: int = 4096,
-            pretrained_model: typing.Union[str, 'PretrainedModels'] = PretrainedModels.DenseNet,
+            pretrained_model: typing.Union[str, 'PretrainedModels']=PretrainedModels.DenseNet,
             device: str = 'cpu'
     ):
         super(SiameseNetwork, self).__init__()
@@ -51,8 +51,10 @@ class SiameseNetwork(nn.Module):
             nn.BatchNorm1d(num_features=4096),
             nn.PReLU(num_parameters=1, init=0.3),
             nn.Linear(4096, num_embedding_dimensions),
-            nn.Sigmoid() #ToDo: nn.Tanh() oder nn.Softmax()
+            nn.Sigmoid()  # ToDo: nn.Tanh() oder nn.Softmax()
         )
+
+        self.last_layer = "Sigmoid"
 
         self.device = device
 
@@ -63,7 +65,7 @@ class SiameseNetwork(nn.Module):
         :param x: Images tensor.
         :return: Embedding of input images.
         """
-        if self.device == "cuda" and torch.cuda.is_available() :
+        if self.device == "cuda" and torch.cuda.is_available():
             x = x.cuda()
 
         # Image Embedding
@@ -88,13 +90,15 @@ class SiameseNetwork(nn.Module):
 
         return anchor_output, positive_output, negative_output
 
-    def inference(self, input_image, use_threshold: bool = True, threshold: float = 10.0, fuzzy_matches: bool = True):
+    def inference(self, input_image, use_threshold: bool = True,
+                  threshold: float = 10.0, fuzzy_matches: bool = True):
         """
         Recognize identity in input images.
 
-        Process: Propagates the input images through the trained model to embed it. Then uses the emb_input to calculate
-        the distance to all anchor embeddings. The smallest distance indicates the identity. Additionally a threshold
-        can be used to make sure that unknown people are not wrongly identified as a known person (from the database).
+        Process: Propagates the input images through the trained model to embed it. Then uses the
+        emb_input to calculate the distance to all anchor embeddings. The smallest distance
+        indicates the identity. Additionally a threshold can be used to make sure that unknown
+        people are not wrongly identified as a known person (from the database).
 
         :param input_image: Image of person to be verified/recognized.
         :param use_threshold: Inference ID with dist < threshold, else smallest dist.

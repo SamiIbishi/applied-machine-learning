@@ -15,7 +15,8 @@ def get_default_loss_function():
     """
     Creates a loss function object with predefined default settings.
 
-    :return: Returns loss_func - TripletMarginLoss - object with default parameters (margin=10.0, p=2, reduction='sum').
+    :return: Returns loss_func - TripletMarginLoss -
+    object with default parameters (margin=10.0, p=2, reduction='sum').
     """
     return TripletMarginLoss(margin=20.0, p=2, reduction='sum')
 
