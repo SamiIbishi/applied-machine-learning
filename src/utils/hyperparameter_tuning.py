@@ -31,20 +31,22 @@ if torch.cuda.is_available():
 # Configurations
 batch_size = 256  # 16
 epochs = 200
-dataset_path = "../../data/celeba_dataset_medium/images/"
+dataset_path = "../../data/celeba_dataset_small/images/"
 val_ratio = 0.1
 
 learning_rates = [0.001]  # [0.001, 0.01, 0.0001]
-optimizers = [(CustomOptimizer.SGD, "SGD")]  #[(CustomOptimizer.ADAM, "Adam"),(CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD"), (CustomOptimizer.Adagrad, "Adagrad")]
+optimizers = [(CustomOptimizer.SGD, "SGD")]  # [(CustomOptimizer.ADAM, "Adam"),
+# (CustomOptimizer.RMSprop, "RMSprop"), (CustomOptimizer.SGD, "SGD"),
+# (CustomOptimizer.Adagrad, "Adagrad")]
 pretrained_models = [(PretrainedModels.DenseNet, "DenseNet")]
 # [(PretrainedModels.ResNet, "ResNet"), (PretrainedModels.DenseNet, "DenseNet"),
 # (PretrainedModels.VGG19, "VGG19")]
 
 logs_per_epoch = 30
-image_logs_frequency = 5
+image_logs_frequency = 3
 log_graph = False
 
-experiment_name = "FaceNet_TripletNetwork_9"  # "FaceNet_TripletNetwork_4"
+experiment_name = "FaceNet_TripletNetwork_13"  # "FaceNet_TripletNetwork_4"
 
 device = "cuda"
 default_optimizer_params = {
@@ -89,7 +91,7 @@ for pretrained_model, model_name in pretrained_models:
             tensorboard_writer = MySummaryWriter(numb_batches=len(train_loader),
                                                  experiment_name=experiment_name,
                                                  run_name=model_name + "_" + optimizer_name +
-                                                          "_" + str(lr), batch_size=batch_size)
+                                                 "_" + str(lr), batch_size=batch_size)
 
             # init model and trainer
             model = SiameseNetwork(pretrained_model=pretrained_model, device=device)

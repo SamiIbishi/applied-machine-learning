@@ -18,15 +18,8 @@ from torchvision import transforms
 import torchvision.models as models
 import torch
 
-# Matplotlib package
-from matplotlib.pyplot import imshow
-from matplotlib.pyplot import show
-
 # PIL Package
 from PIL import Image
-
-# Substitute Package
-from re import sub
 
 
 class FaceRecognitionDataset(Dataset):
@@ -73,11 +66,12 @@ class FaceRecognitionDataset(Dataset):
         # Get all the subfolders of the different persons
         self.image_filepaths = [f.path for f in os.scandir(self.dataset_folder) if f.is_dir()]
 
-        self.person_dict_path = os.path.join(self.dataset_folder, ".." ,"person_dict.npy")
+        self.person_dict_path = os.path.join(self.dataset_folder, "..", "person_dict.npy")
         self.triplets_path = os.path.join(self.dataset_folder, "..", "triplets.npy")
         self.anchor_dict_path = os.path.join(self.dataset_folder, "..", "anchor_dict.npy")
 
-        if ((not overwrite_dicts) and (os.path.exists(self.person_dict_path)) and (os.path.exists(self.anchor_dict_path))):
+        if ((not overwrite_dicts) and (os.path.exists(self.person_dict_path)) and
+                (os.path.exists(self.anchor_dict_path))):
             self.person_dict = np.load(self.person_dict_path, allow_pickle=True).item()
             self.anchor_dict = np.load(self.anchor_dict_path, allow_pickle=True).item()
             print("loaded persons dict from file: ", self.person_dict_path)

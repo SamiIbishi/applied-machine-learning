@@ -18,7 +18,7 @@ def get_default_loss_function():
     :return: Returns loss_func - TripletMarginLoss -
     object with default parameters (margin=10.0, p=2, reduction='sum').
     """
-    return TripletMarginLoss(margin=10.0, p=2, reduction='sum')
+    return TripletMarginLoss(margin=20.0, p=2, reduction='sum')
 
 
 def get_loss_function(loss_func: typing.Union[str, 'CustomLossFunctions'], **loss_func_args):

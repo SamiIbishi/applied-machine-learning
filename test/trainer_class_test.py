@@ -55,7 +55,6 @@ if __name__ == '__main__':
 
     # write sample images to tensorboard
 
-
     # Deleting image variables to free RAM
     anchors_grid = None
     positives_grid = None

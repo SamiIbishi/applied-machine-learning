@@ -16,6 +16,7 @@ from src.utils.utils_optimizer import CustomOptimizer, get_optimizer, get_defaul
 from src.utils.utils_loss_functions import CustomLossFunctions, get_loss_function, \
     get_default_loss_function
 import src.utils.utils_images as img_util
+import numpy as np
 
 
 # Template to modify
@@ -140,7 +141,7 @@ class SiameseNetworkTrainer:
             if batch_idx % self.log_frequency == self.log_frequency - 1 or batch_idx == len(
                     self.train_loader) - 1:
                 header = f"[{epoch:02d}/{self.epochs}][{batch_idx}/{len(self.train_loader)}]"
-                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx % self.log_frequency +1)
+                epoch_loss = (running_loss / anchor.size(0)) / (batch_idx % self.log_frequency + 1)
                 print(f"{header} => running trainings loss: {epoch_loss:.2f}")
                 if self.tensorboard_writer:
                     self.tensorboard_writer.log_training_loss(epoch_loss, batch_idx)
@@ -225,7 +226,8 @@ class SiameseNetworkTrainer:
                 running_dist_ap = 0
                 running_dist_an = 0
 
-            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs)  \
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or
+                epoch == self.epochs) \
                     and batch_idx == 0\
                     and self.tensorboard_writer:
                 # Print the first batch of images with their distances to tensorboard
@@ -268,12 +270,14 @@ class SiameseNetworkTrainer:
                 self.tensorboard_writer.increment_epoch()
             self.evaluate_epoch(epoch)
 
-            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or epoch == self.epochs) \
-                and self.tensorboard_writer:
+            if (epoch % self.image_log_frequency == self.image_log_frequency - 1 or
+                    epoch == self.epochs) \
+                    and self.tensorboard_writer:
+
                 batch = iter(self.valid_loader).next()
                 self.inference_to_tensorboard(batch)
 
-            if epoch_loss < 10:
+            if epoch_loss < 1:
                 print(
                     f"##### Interrupt training because training loss is {epoch_loss} and very good")
                 break
@@ -334,14 +338,6 @@ class SiameseNetworkTrainer:
         # Save model
         torch.save(self.model.state_dict(), os.path.join(trainings_dir_path, 'model'))
 
-        # model parameter
-        model_parameter = {
-            "input_size": self.model.input_size,
-            "num_features": self.num_features,
-            "num_embedding_dimensions": self.num_embedding_dimensions,
-            "pretrained_model": self.pretrained_model
-        }
-
         duration = self.end_time_training - self.start_time_training
         minutes = round(duration // 60, 0)
         seconds = round(duration % 60, 0)
@@ -356,6 +352,16 @@ class SiameseNetworkTrainer:
             "batches in train": len(self.train_loader),
             "batch size": len(iter(self.train_loader).next()[0][0]),
             "total_duration: ": f"{minutes} min {seconds} sec"
+
+        }
+
+        # model parameter
+        model_parameter = {
+            "input_size": self.model.input_size,
+            "num_features": self.model.num_features,
+            "num_embedding_dimensions": self.model.num_embedding_dimensions,
+            "pretrained_model": self.model.pretrained_model
+
         }
 
         if self.optimizer_args:
@@ -366,13 +372,10 @@ class SiameseNetworkTrainer:
             for loss_func_arg, loss_func_arg_value in self.loss_func_args.items():
                 hyperparameter['optimizer_arg_' + loss_func_arg] = loss_func_arg_value
 
-        np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
-        # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
-        # with open(os.path.join(trainings_dir_path, 'hyperparameter.json'), "w") as write_file:
-        #     json.dump(hyperparameter, write_file)
-
         np.save(os.path.join(trainings_dir_path, 'model_parameter.npy'), model_parameter)
-        # with open(os.path.join(trainings_dir_path, 'model_parameter.json'), "w") as write_file:
-        #     json.dump(model_parameter, write_file)
+ 
+        # torch.save(hyperparameter, os.path.join(trainings_dir_path, 'hyperparameter.json'))
+        np.save(os.path.join(trainings_dir_path, 'hyperparameter.npy'), hyperparameter)
 
-        torch.save(self.model.anchor_embeddings, os.path.join(trainings_dir_path, 'anchor_embeddings'))
+        torch.save(self.model.anchor_embeddings,
+                   os.path.join(trainings_dir_path, 'anchor_embeddings'))

@@ -136,7 +136,4 @@ def download_dataset(local: bool = True):
                               url='https://drive.google.com/uc?id'
                                   '=1Uqqt7EDq1gQp6hfOixVG8vZUtBVBMwVg',
                               filename="images.zip", unzip=True, preprocess=True,
-                              number_of_positives=29)
-
-
-download_dataset(False)
+                              number_of_positives=10)
