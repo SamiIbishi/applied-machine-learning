@@ -1,14 +1,32 @@
-# applied-ml
- Application Challenges for Machine Learning am Beispiel von IBM Power Architecture.
+# Applied Machine Learning
 
-## Requirements
+> This project was build in the scope of an advanced practical course "Application Challenges 
+for Machine Learning utilizing IBM Power Architecture" at Technical University Munich. Which is supported via the cooperation between TU Munich and IBM.
+The overall task is to build a robust face recognition model. Including the possibility of one shot learning. Additionally, ethical questions regarding 
+face recognition should be elaborated.
+[OpenPower@TUM](https://openpower.ucc.in.tum.de/home2/education/teaching-and-practical-courses/winter-2020-2021/)
 
-Python >= 3.8
-CudaToolkit = 11.0
-Pytorch = 1.7
-Tensorboard = 2.4
+<hr>
 
-## Conda Environment 
+# Table of Contents
+* [Requirements](#requirements)
+* [Conda Environment](#conda-environment)
+* [Face Recognition](#face-recognition)
+    * [Streamlit App](#streamlit-app)
+    * [Jupyter Notebooks](#jupyter-notebooks)
+* [Folder Structure](#folder-structure)
+* [License](#license)
+
+
+## <a name="requirements"></a> Requirements
+
+Python >= 3.8       <br />
+CudaToolkit = 11.0  <br />
+Pytorch = 1.7       <br />
+Tensorboard = 2.4   <br />
+Streamlit = 0.74.1  <br />
+
+## <a name="conda-environment"></a> Conda Environment 
 
 For this project we used a conda environment - "applied-ml". 
 
@@ -19,13 +37,50 @@ Execute the following command:
 
     $ conda env create -f environment.yml
 
-That should create the conda enviroment "applied-ml". Finally activate it by:
+That should create the conda enviroment "applied-ml". Finally, activate it by:
 
 	$ conda activate applied-ml
 
-Now, you should be able to execute all scripts and notebooks. 
+Now, you should be able to execute all scripts and notebooks. If the environment yaml 
+file changed since creation, you can use the following command to update your conda
+environment. This command will add the new packages and delete all packages that are not
+used anymore.
 
-## Folder Structure
+    $ conda env update -f environment.yml --prune
+
+If you work on this repository and need to add new packages. Install them first while
+being in the conda environment. Then use the following command:
+
+    § conda env export | grep -v "^prefix: " > environment.yml
+
+Be aware that this command includes linux terminal specific command ('grep') which means
+that it can't be executed on a normal Windows terminal.You can use a special terminal that
+interprets this commands. Alternatively, you can first update the yaml file with the following 
+command and then delete the prefix entry manually. 
+
+    $ conda env export > environment.yml
+
+## <a name="face-recognition"></a> Face Recognition
+
+### <a name="streamlit-app"></a> Streamlit App
+We added the streamlit app to visualize the functionalities of our face recognition application. 
+It includes a short description of the application, a tutorial, as well as a one shot learning
+part. Use the following command in the terminal to start the streamlit app:
+
+    $ streamlit run FaceRecognitionApp.py
+
+### <a name="jupyter-notebooks"></a> Jupyter Notebooks 
+We added several jupyter notebooks to explore the dataset, investigate the model, and to 
+create a machine learning pipeline. To use one of the following commands in the terminal to
+start the jupyter notebooks:
+
+    $ jupyter lab
+
+or 
+
+    $ jupyter notebook
+
+## <a name="folder-structure"></a> Folder Structure
   ```
   applied-machine-learning/
   │
@@ -34,33 +89,54 @@ Now, you should be able to execute all scripts and notebooks.
   ├── LICENSE
   ├── README.md
   │
-  ├── data/ - default directory for storing input data
+  ├── FaceRecognitionApp.py
+  ├── Playground.ipynb
+  ├── ToyPipeline_FaceNet.ipynb
+  ├── Pipeline_FaceNet.ipynb
   │
-  ├── data_loader/ - anything about data loading goes here
-  │   ├── FaceRecognitionDataset.py
-  │   └── data_loaders.py - NOT EXISTING YET
+  ├── documentation/
+  │   └── images/
   │
-  ├── logger/ - module for tensorboard visualization and logging
-  │   ├── logger.py - NOT EXISTING YET
-  |   └── ...
-  │  
-  ├── model/ - models, losses, and metrics
-  │   ├── FaceNet.py
-  │   ├── model.py - NOT EXISTING YET
-  │   ├── metric.py - NOT EXISTING YET
-  │   └── loss.py - NOT EXISTING YET
+  ├── tutorial_images/
+  │   ├── anchor_images/
+  │   └── test_images/
   │
-  ├── saved/
-  │   ├── models/ - trained models are saved here
-  │   └── log/ - default logdir for tensorboard and logging output
-  │
-  ├── trainer/ - trainers
-  │   ├── FaceNetTrainer.py
-  │   └── trainer.py - NOT EXISTING YET
-  │
-  └── utils/ - small utility functions
-      ├── util.py - NOT EXISTING YET
-      └── ...
+  ├── pretrained_model/
+  │   ├── model
+  │   ├── hyper_parameter.json
+  │   ├── model_parameter.json
+  │   └── anchor_embedding.json
+  |
+  └── src/
+      ├── data/ - default directory for storing input data
+      │
+      ├── data_loader/ - anything about data loading goes here
+      │   ├── DatasetDownloader.py
+      │   ├── FaceRecognitionDataset.py
+      │   └── DataSplitter.py
+      │
+      ├── logger/ - module for tensorboard visualization and logging
+      │   └── logger.py - NOT EXISTING YET
+      │  
+      ├── model/ - models, losses, and metrics
+      │   └── FaceNet.py
+      │
+      ├── saved/
+      │   ├── trained_models/ - trained models are saved here
+      │   └── log/ - default logdir for tensorboard and logging output
+      │
+      ├── trainer/ - trainers
+      │   └── FaceNetTrainer.py
+      │
+      └── utils/ - small utility functions
+          ├── hyperparameter_tuning.py
+          ├── offline_training.py
+          ├── utils.py
+          ├── utils_images.py
+          ├── utils_loss_functions.py
+          ├── utils_optimizer.py
+          ├── utils_pretrained_models.py
+          └── utils_tensorboard.py
   ```
 
 ## License

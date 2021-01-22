@@ -1,5 +1,6 @@
 name: applied-ml
 channels:
+  - metric-learning
   - pytorch
   - conda-forge
   - defaults
@@ -11,8 +12,8 @@ dependencies:
   - blas=1.0=mkl
   - bleach=3.2.1=py_0
   - brotlipy=0.7.0=py38h2bbff1b_1003
-  - ca-certificates=2020.12.5=h5b45459_0
-  - certifi=2020.12.5=py38haa244fe_0
+  - ca-certificates=2020.12.8=haa95532_0
+  - certifi=2020.12.5=py38haa95532_0
   - cffi=1.14.3=py38hcd4344a_2
   - chardet=3.0.4=py38haa95532_1003
   - colorama=0.4.4=py_0
@@ -85,7 +86,7 @@ dependencies:
   - numpy-base=1.19.2=py38ha3acd2a_0
   - olefile=0.46=py_0
   - opencv=4.0.1=py38h2a7c758_0
-  - openssl=1.1.1h=he774522_0
+  - openssl=1.1.1i=h2bbff1b_0
   - packaging=20.4=py_0
   - pandas=1.1.3=py38ha925a31_0
   - pandas-datareader=0.9.0=py_0
@@ -112,6 +113,7 @@ dependencies:
   - python-dateutil=2.8.1=py_0
   - python_abi=3.8=1_cp38
   - pytorch=1.7.0=py3.8_cuda110_cudnn8_0
+  - pytorch-metric-learning=0.9.95=pyh39e3cac_0
   - pytz=2020.1=py_0
   - pywin32=227=py38he774522_1
   - pywinpty=0.5.7=py38_0
@@ -156,18 +158,37 @@ dependencies:
   - zstd=1.4.5=h04227a9_0
   - pip:
     - absl-py==0.11.0
+    - altair==4.1.0
+    - astor==0.8.1
+    - base58==2.1.0
+    - blinker==1.4
     - cachetools==4.1.1
+    - click==7.1.2
+    - dataclasses==0.6
+    - future==0.18.2
+    - gitdb==4.0.5
+    - gitpython==3.1.12
     - google-auth==1.23.0
     - google-auth-oauthlib==0.4.2
     - grpcio==1.33.2
     - markdown==3.3.3
     - oauthlib==3.1.0
     - protobuf==3.14.0
+    - pyarrow==2.0.0
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
+    - pydeck==0.5.0
     - requests-oauthlib==1.3.0
     - rsa==4.6
+    - smmap==3.0.4
+    - streamlit==0.74.1
     - tensorboard==2.4.0
     - tensorboard-plugin-wit==1.7.0
+    - toml==0.10.2
+    - toolz==0.11.1
+    - torchsummary==1.5.1
+    - tzlocal==2.1
+    - validators==0.18.2
+    - watchdog==1.0.2
     - werkzeug==1.0.1
     - wget==3.2
