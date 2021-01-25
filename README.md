@@ -107,28 +107,33 @@ or
   │   ├── model_parameter.json
   │   └── anchor_embedding.json
   |
+  ├── test/
+  │   ├── Pep8Validation.py
+  │   ├── tensorboard_test.py
+  │   └── trainer_class_test.py
+  |
   └── src/
-      ├── data/ - default directory for storing input data
+      ├── data/
       │
-      ├── data_loader/ - anything about data loading goes here
+      ├── data_loader/ 
       │   ├── DatasetDownloader.py
       │   ├── FaceRecognitionDataset.py
       │   └── DataSplitter.py
       │
-      ├── logger/ - module for tensorboard visualization and logging
+      ├── logger/ - module for visualization and logging
       │   └── logger.py - NOT EXISTING YET
       │  
-      ├── model/ - models, losses, and metrics
+      ├── model/ 
       │   └── FaceNet.py
       │
       ├── saved/
-      │   ├── trained_models/ - trained models are saved here
+      │   ├── trained_models/
       │   └── log/ - default logdir for tensorboard and logging output
       │
-      ├── trainer/ - trainers
+      ├── trainer/ 
       │   └── FaceNetTrainer.py
       │
-      └── utils/ - small utility functions
+      └── utils/ 
           ├── hyperparameter_tuning.py
           ├── offline_training.py
           ├── utils.py
