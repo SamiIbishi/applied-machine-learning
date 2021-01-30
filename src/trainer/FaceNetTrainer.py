@@ -20,7 +20,7 @@ import numpy as np
 
 
 # Template to modify
-class SiameseNetworkTrainer:
+class FaceNetTrainer:
     def __init__(
             self,
             model,

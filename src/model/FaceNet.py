@@ -22,7 +22,7 @@ def num_flat_features(x):
     return num_features
 
 
-class SiameseNetwork(nn.Module):
+class FaceNet(nn.Module):
     def __init__(
             self,
             input_size: int = 224,
@@ -31,7 +31,7 @@ class SiameseNetwork(nn.Module):
             pretrained_model: typing.Union[str, 'PretrainedModels']=PretrainedModels.DenseNet,
             device: str = 'cpu'
     ):
-        super(SiameseNetwork, self).__init__()
+        super(FaceNet, self).__init__()
 
         self.input_size = input_size
         self.num_embedding_dimensions = num_embedding_dimensions

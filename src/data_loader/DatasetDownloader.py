@@ -101,7 +101,7 @@ def download_dataset(local: bool = True):
     """
     :param local: on a local machine only use subset of the data. on a server uses full dataset
     """
-    base_data_dir = "../../data"
+    base_data_dir = "./data"
     dataset_dir = base_data_dir + "/celeba_dataset_medium"
 
     # Create the directories if necessary

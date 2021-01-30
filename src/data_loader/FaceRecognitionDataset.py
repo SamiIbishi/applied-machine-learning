@@ -33,6 +33,7 @@ class FaceRecognitionDataset(Dataset):
         :param dataset_dir: (Local) Path to the main folder containing the dataset
         :param image_width:
         :param image_height:
+        :param overwrite_dicts:
 
         :return: dataset: Dataset object with resized images and their respective labels
         """
@@ -83,7 +84,7 @@ class FaceRecognitionDataset(Dataset):
             print("saved persons dict to file: ", self.person_dict_path)
 
         # Get the triplets of original, similar, random
-        if ((not overwrite_dicts) and (os.path.exists(self.triplets_path))):
+        if (not overwrite_dicts) and (os.path.exists(self.triplets_path)):
             self.triplets = list(np.load(self.triplets_path, allow_pickle=True))
             print("loaded triplets from file: ", self.triplets_path)
         else:
@@ -143,8 +144,12 @@ class FaceRecognitionDataset(Dataset):
         person_dict = dict()
         print(f"start anchor selection: {datetime.datetime.now()}")
         for index, image_subfolder in enumerate(self.image_filepaths):
-            if index % 10 == 0:
-                print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
+            print(index)
+            print(image_subfolder)
+
+
+            #if index % 10 == 0:
+            #    print(f"Anchor selection for person {index} of {len(self.image_filepaths)}")
 
             person_id = int(os.path.basename(image_subfolder).split('.')[0])
 

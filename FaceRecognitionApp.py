@@ -11,7 +11,7 @@ from PIL import Image,ImageEnhance
 # Project Modules
 from torchvision.transforms import transforms
 
-from src.model.FaceNet import SiameseNetwork
+from src.model.FaceNet import FaceNet
 
 # Streamlit Imports
 import streamlit as st
@@ -225,7 +225,7 @@ def print_image(image_file):
 
 @st.cache()
 def load_pretrained_model():
-    model = SiameseNetwork()
+    model = FaceNet()
     model.load_state_dict(torch.load(PRETRAINED_MODEL_PATH, map_location=torch.device("cpu")))
     model.eval()
     return model
