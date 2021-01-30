@@ -5,7 +5,7 @@ import torch
 
 from src.data_loader import DataSplitter
 from src.data_loader.FaceRecognitionDataset import FaceRecognitionDataset
-from src.model.FaceNet import SiameseNetwork
+from src.model.FaceNet import FaceNet
 from src.utils.utils_tensorboard import MySummaryWriter
 from src.trainer import FaceNetTrainer
 
@@ -63,7 +63,7 @@ dataset = FaceRecognitionDataset(dataset_dir=dataset_path)
 print("Created dataset, len:", len(dataset))
 train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=val_ratio)
 
-model = SiameseNetwork()
+model = FaceNet()
 print("Created model")
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                            batch_size=batch_size,
@@ -94,7 +94,7 @@ for pretrained_model, model_name in pretrained_models:
                                                  "_" + str(lr), batch_size=batch_size)
 
             # init model and trainer
-            model = SiameseNetwork(pretrained_model=pretrained_model, device=device)
+            model = FaceNet(pretrained_model=pretrained_model, device=device)
             optimizer = get_optimizer(optimizer=optimizer_type,
                                       optimizer_params=model.parameters(),
                                       optimizer_args=default_optimizer_params)
@@ -109,7 +109,7 @@ for pretrained_model, model_name in pretrained_models:
                 time.sleep(10)
                 print("Wrote model graph to tensorboard")
 
-            trainer = FaceNetTrainer.SiameseNetworkTrainer(
+            trainer = FaceNetTrainer.FaceNetTrainer(
                 model=model,
                 train_loader=train_loader,
                 valid_loader=val_loader,

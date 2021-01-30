@@ -5,24 +5,26 @@
 .idea
 
 # Data folder with images
-.src/data
+/data/celeba_dataset_small/
+/data/toy_dataset/
 
+# Pycache folder
 src/model/__pycache__/
-
 src/utils/__pycache__/
-
 src/data_loader/__pycache__/
-
 src/trainer/__pycache__/
 
-src/data/toy_dataset/images/
-
-src/data/toy_dataset/
-
+# Stored models
 src/saved/models/
 
+# Our pretrained model
 pretrained_model/
 
+# Tutorial images (Streamlit app)
 tutorial_images/anchor_images/
-
 tutorial_images/test_images/
+
+
+src/__pycache__/
+
+data/celeba_dataset_medium/

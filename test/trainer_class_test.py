@@ -3,8 +3,8 @@ import torchvision
 from src.utils import utils_tensorboard
 from src.data_loader.FaceRecognitionDataset import FaceRecognitionDataset
 from src.data_loader import DataSplitter
-from src.model.FaceNet import SiameseNetwork
-from src.trainer.FaceNetTrainer import SiameseNetworkTrainer
+from src.model.FaceNet import FaceNet
+from src.trainer.FaceNetTrainer import FaceNetTrainer
 
 import time
 import src.utils.utils_images as img_util
@@ -18,7 +18,7 @@ if __name__ == '__main__':
     print("Created dataset, len:", len(dataset))
     train_dataset, val_dataset = DataSplitter.split_train_test(dataset=dataset, val_ratio=0.1)
     print("Splitted dataset")
-    model = SiameseNetwork()
+    model = FaceNet()
     print("Created model")
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
                                                batch_size=batch_size,
@@ -35,12 +35,12 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     print("Created optimizer")
     tensorboard_writer = utils_tensorboard.MySummaryWriter(
-        numb_batches=len(train_loader), batch_size=batch_size, experiment_name="SiameseNetwork")
+        numb_batches=len(train_loader), batch_size=batch_size, experiment_name="FaceNet")
     print("Created tensorboard_writer")
-    trainer = SiameseNetworkTrainer(model=model, train_loader=train_loader,
-                                    valid_loader=val_loader, test_loader=val_loader,
-                                    optimizer=optimizer, tensorboard_writer=tensorboard_writer,
-                                    device="cuda")
+    trainer = FaceNetTrainer(model=model, train_loader=train_loader,
+                             valid_loader=val_loader, test_loader=val_loader,
+                             optimizer=optimizer, tensorboard_writer=tensorboard_writer,
+                             device="cuda")
     print("Created trainer")
 
     dataiter = iter(train_loader)
