@@ -137,8 +137,7 @@ class FaceNet(nn.Module):
                 matched_ids = list()
                 for person_id, emb_anchor in self.anchor_embeddings.items():
                     dist = f.pairwise_distance(emb_anchor, emb_input).item()
-                    matched_ids.append(
-                        (person_id, round(dist, 2)))  # all ids with dists smaller than threshold
+                    matched_ids.append((person_id, round(dist, 2)))
                 matched_ids.sort(key=lambda x: x[1])
             else:
                 smallest_distance = float("inf")

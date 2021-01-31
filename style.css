@@ -1,0 +1,19 @@
+.center {
+  text-align: center;
+  border: 3px solid green;
+}
+.highlight {
+  border-radius: 0.4rem;
+  color: white;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+}
+.bold {
+  font-weight: 700;
+}
+.green {
+  background-color: green;
+}
+.red {
+  background-color: red;
+}
