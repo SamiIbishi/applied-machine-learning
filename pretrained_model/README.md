@@ -8,7 +8,7 @@ from [this](https://drive.google.com/file/d/1Zwbq4lXEhLsJfm2l6PWp9lHvMRrZxkeJ/vi
 Step 2) Extract the folder and copy the content in this directory 'pretrained_model'. This folder needs to be in the root
 directory. 
 
-Step 3) Verify whether it successfully loaded by executing the streamlit app. (Befre doing that, check whether the 
+Step 3) Verify whether it successfully loaded by executing the streamlit app. (Before doing that, check whether the 
 demo data is loaded.) In order to start the streamlit app you need to enter following command into the terminal 
 (while being in project root):
 
