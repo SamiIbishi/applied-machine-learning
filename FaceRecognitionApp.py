@@ -188,11 +188,21 @@ def get_section_about():
     create the embedding of the face. We tried different combinations of pretrained models and output sizes of 
     the embedding.
 
+    
+    #### Model Architecture in Trainings-Phase (Triplet-Net)
+    
+    The following figure describes the model architecture in the trainings phase. The triplets are fed into the 
+    Model in order to calculate the embedding representation of the facial features. Afterwards the distance between
+    the embeddings is calculated and compared. 
     '''
+
     st.write('')
     st.write('')
-    st.image(Image.open(Path('documentation/images/ModelComposition.png')),
-             caption='Schematic visualization of our model composition.', use_column_width=False)
+    st.image(Image.open(Path('documentation/images/TrainingsProcess.png')),
+             caption='Visualisation of the structure during training using "Triplet Loss".',
+             use_column_width=True)
+    st.write('')
+    st.write('')
 
 
 def get_section_tutorial(OurFaceNet):
@@ -385,8 +395,8 @@ def load_tutorial_anchor_images(path: typing.Union[str, Path] = TUTORIAL_ANCHOR)
         st.error(f"The given path: '{path}' is not a directory. Please reenter valid path!")
         return None
 
-    anchor_dict = {}
-    anchor_files = [f for f in anchor_images_path.glob("./*") if f.is_file()]
+    anchor_files = [f for f in anchor_images_path.glob("./*") if f.is_file() and f.suffix in ['.jpeg', '.jpg', '.png']]
+    anchor_files = sorted(anchor_files, key=lambda file: file.stem)
 
     anchor_col_1, anchor_col_2, anchor_col_3 = st.beta_columns(3)
     visited = [False, False]
@@ -414,13 +424,15 @@ def load_tutorial_test_images(path: typing.Union[str, Path] = TUTORIAL_TEST):
     :return:
     """
 
-    test_images_path = Path(path)
+    path_test_images = Path(path)
 
-    if not test_images_path.is_dir():
+    if not path_test_images.is_dir():
         st.error(f"The given path: '{path}' is not a directory. Please reenter valid path!")
         return None
 
-    return [f for f in test_images_path.glob("./*") if f.is_file()]
+    test_files = [f for f in path_test_images.glob("./*") if f.is_file() and f.suffix in ['.jpeg', '.jpg', '.png']]
+
+    return sorted(test_files, key=lambda file: file.stem)
 
 
 def print_image(image_file):
