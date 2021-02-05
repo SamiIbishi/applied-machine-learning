@@ -13,7 +13,6 @@ face recognition should be elaborated.
 * [Conda Environment](#conda-environment)
 * [Face Recognition](#face-recognition)
     * [Streamlit App](#streamlit-app)
-    * [Jupyter Notebooks](#jupyter-notebooks)
 * [Folder Structure](#folder-structure)
 * [License](#license)
 
@@ -69,17 +68,6 @@ part. Use the following command in the terminal to start the streamlit app:
 
     $ streamlit run FaceRecognitionApp.py
 
-### <a name="jupyter-notebooks"></a> Jupyter Notebooks 
-We added several jupyter notebooks to explore the dataset, investigate the model, and to 
-create a machine learning pipeline. To use one of the following commands in the terminal to
-start the jupyter notebooks:
-
-    $ jupyter lab
-
-or 
-
-    $ jupyter notebook
-
 ## <a name="folder-structure"></a> Folder Structure
   ```
   applied-machine-learning/
@@ -90,9 +78,6 @@ or
   ├── README.md
   │
   ├── FaceRecognitionApp.py
-  ├── Playground.ipynb
-  ├── ToyPipeline_FaceNet.ipynb
-  ├── Pipeline_FaceNet.ipynb
   │
   ├── documentation/
   │   └── images/
